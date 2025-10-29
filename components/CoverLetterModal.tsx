@@ -13,7 +13,7 @@ interface CoverLetterModalProps {
 const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
     <input
       {...props}
-      className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white/50"
+      className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm bg-white/50"
     />
 );
 
@@ -88,8 +88,8 @@ export const CoverLetterModal: React.FC<CoverLetterModalProps> = ({ isOpen, onCl
             return (
                 <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-bold text-stone-800">Your Drafted Cover Letter</h3>
-                        <button onClick={resetState} className="text-sm text-indigo-600 hover:underline">
+                        <h3 className="text-lg font-bold text-stone-800 font-['Poppins']">Your Drafted Cover Letter</h3>
+                        <button onClick={resetState} className="text-sm text-teal-600 hover:underline">
                             &larr; Start Over
                         </button>
                     </div>
@@ -97,7 +97,7 @@ export const CoverLetterModal: React.FC<CoverLetterModalProps> = ({ isOpen, onCl
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
                         rows={15}
-                        className="w-full text-sm px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white/50"
+                        className="w-full text-sm px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 bg-white/50"
                     />
                     <div className="flex space-x-3">
                         <button
@@ -111,7 +111,7 @@ export const CoverLetterModal: React.FC<CoverLetterModalProps> = ({ isOpen, onCl
                             href={createMailtoLink()}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                            className="flex-1 flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300"
                         >
                             <MailIcon className="w-5 h-5 mr-2" />
                             Open in Email Client
@@ -147,7 +147,7 @@ export const CoverLetterModal: React.FC<CoverLetterModalProps> = ({ isOpen, onCl
                 <button
                     onClick={handleGenerate}
                     disabled={!jobTitle || !companyName || isLoading}
-                    className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300 disabled:from-stone-300 disabled:to-stone-400 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed"
                 >
                     {isLoading ? (
                         <>
@@ -177,10 +177,10 @@ export const CoverLetterModal: React.FC<CoverLetterModalProps> = ({ isOpen, onCl
 
     return (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-xl max-h-[90vh] flex flex-col transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale">
-                <header className="p-4 border-b flex justify-between items-center">
+            <div className="bg-white/80 backdrop-blur-lg rounded-xl shadow-2xl shadow-green-300/30 w-full max-w-xl max-h-[90vh] flex flex-col transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale border border-white/50">
+                <header className="p-4 border-b border-green-100/80 flex justify-between items-center">
                     <div>
-                        <h2 className="text-xl font-bold text-stone-800">Cover Letter Composer</h2>
+                        <h2 className="text-xl font-bold text-stone-800 font-['Poppins']">Cover Letter Composer</h2>
                         <p className="text-sm text-stone-600">Generate a tailored cover letter for a specific job.</p>
                     </div>
                     <button onClick={handleClose} className="text-stone-400 hover:text-stone-600 p-1 rounded-full text-2xl leading-none">&times;</button>

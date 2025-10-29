@@ -13,7 +13,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ selectedLang
       <select
         value={selectedLanguage}
         onChange={(e) => onLanguageChange(e.target.value)}
-        className="appearance-none w-full bg-white border border-stone-300 text-stone-700 py-2 pl-10 pr-4 rounded-md leading-tight focus:outline-none focus:bg-white focus:border-indigo-500 text-sm"
+        className="appearance-none w-full bg-white border border-stone-300 text-stone-700 py-2 pl-10 pr-4 rounded-md leading-tight focus:outline-none focus:bg-white focus:border-teal-500 text-sm"
         aria-label="Select language"
       >
         <optgroup label="Global Languages">

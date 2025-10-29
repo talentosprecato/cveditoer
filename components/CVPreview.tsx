@@ -22,15 +22,10 @@ interface CVPreviewProps {
   selectedTemplate: string;
   onTemplateChange: (id: string) => void;
   onGenerate: () => void;
-  videoUrl?: string;
   photoAlignment: 'left' | 'right' | 'none';
   onPhotoAlignmentChange: (alignment: 'left' | 'right' | 'none') => void;
   photoSize: 'small' | 'medium' | 'large';
   onPhotoSizeChange: (size: 'small' | 'medium' | 'large') => void;
-  videoAlignment: 'left' | 'right' | 'center' | 'full';
-  onVideoAlignmentChange: (alignment: 'left' | 'right' | 'center' | 'full') => void;
-  videoSize: 'small' | 'medium' | 'large';
-  onVideoSizeChange: (size: 'small' | 'medium' | 'large') => void;
   portfolio: PortfolioItem[];
   fontPair: string;
   onFontPairChange: (id: string) => void;
@@ -51,7 +46,7 @@ interface OptionSelectorProps<T extends string> {
 const OptionSelector = <T extends string>({ label, options, selectedOption, onChange }: OptionSelectorProps<T>) => {
     return (
         <div>
-            <h3 className="text-lg font-semibold text-stone-800 mb-2">{label}</h3>
+            <h3 className="text-lg font-semibold text-stone-800 mb-2 font-['Poppins']">{label}</h3>
             <div className="flex space-x-2 rounded-md bg-stone-100 p-1">
                 {options.map(option => (
                     <button
@@ -59,7 +54,7 @@ const OptionSelector = <T extends string>({ label, options, selectedOption, onCh
                         onClick={() => onChange(option.id)}
                         className={`w-full rounded py-1.5 text-sm font-medium transition-colors ${
                             selectedOption === option.id
-                                ? 'bg-white shadow-sm text-indigo-600'
+                                ? 'bg-white shadow-sm text-teal-600'
                                 : 'text-stone-600 hover:bg-stone-200'
                         }`}
                         aria-pressed={selectedOption === option.id}
@@ -262,34 +257,6 @@ const CVPreviewStyles = () => (
             border-width: 0 0 3px 0;
             border-style: solid;
         }
-        
-        .video-presentation-section {
-            margin-bottom: 1em;
-        }
-        .video-presentation-section.size-small .video-container { max-width: 30%; }
-        .video-presentation-section.size-medium .video-container { max-width: 50%; }
-        .video-presentation-section.size-large .video-container { max-width: 75%; }
-        .video-presentation-section.align-left .video-container { margin-right: auto; margin-left: 0; }
-        .video-presentation-section.align-right .video-container { margin-left: auto; margin-right: 0; }
-        .video-presentation-section.align-center .video-container { margin-left: auto; margin-right: auto; }
-        .video-presentation-section.align-full .video-container { max-width: 100%; }
-
-        .video-presentation-section .video-container {
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            background-color: #000;
-            margin-top: 0.5em;
-            overflow: hidden;
-        }
-        .video-presentation-section video,
-        .video-presentation-section iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
 
         /* Photo & Table Styles */
         .cv-preview-content table {
@@ -462,308 +429,158 @@ const LoadingSkeleton = () => (
 
 const Placeholder = () => (
     <div className="text-center text-stone-500">
-        <div className="bg-stone-100 border-2 border-dashed border-stone-300 rounded-lg p-12">
+        <div className="bg-stone-100/50 border-2 border-dashed border-stone-300 rounded-lg p-12">
             <svg className="mx-auto h-12 w-12 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-stone-900">Veravox AI CV Editor</h3>
+            <h3 className="mt-2 text-sm font-medium text-stone-900 font-['Poppins']">Veravox AI CV Editor</h3>
             <p className="mt-1 text-sm text-stone-500">Fill out the form and click "Generate" to see your professional CV here.</p>
         </div>
     </div>
 )
 
-const getVideoEmbed = (url: string) => {
-  if (!url) return null;
-
-  // YouTube
-  const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/;
-  const youtubeMatch = url.match(youtubeRegex);
-  if (youtubeMatch && youtubeMatch[1]) {
-    const videoId = youtubeMatch[1];
-    return (
-      <div className="video-container">
-        <iframe
-          src={`https://www.youtube.com/embed/${videoId}`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          title="Embedded YouTube Video"
-        ></iframe>
-      </div>
-    );
-  }
-
-  // Blob URL (from recording or file upload)
-  if (url.startsWith('blob:')) {
-    return (
-      <div className="video-container">
-        <video key={url} controls src={url}></video>
-      </div>
-    );
-  }
-
-  // Fallback for other URLs (LinkedIn, Facebook, etc.)
-  return (
-    <div className="p-4 text-sm bg-stone-100 rounded-md">
-      <p>A video presentation is available at the following link:</p>
-      <a href={url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline break-all">{url}</a>
-    </div>
-  );
-};
-
-
 export const CVPreview: React.FC<CVPreviewProps> = ({ 
     markdownContent, 
     isLoading, 
-    error, 
-    selectedTemplate, 
-    onTemplateChange, 
-    onGenerate, 
-    videoUrl, 
-    photoAlignment, onPhotoAlignmentChange, 
-    photoSize, onPhotoSizeChange,
-    videoAlignment, onVideoAlignmentChange,
-    videoSize, onVideoSizeChange,
-    portfolio, fontPair, onFontPairChange 
+    error,
+    selectedTemplate,
+    onTemplateChange,
+    onGenerate,
+    photoAlignment,
+    onPhotoAlignmentChange,
+    photoSize,
+    onPhotoSizeChange,
+    portfolio,
+    fontPair,
+    onFontPairChange,
 }) => {
-  const [htmlContent, setHtmlContent] = useState('');
-  const [isExporting, setIsExporting] = useState<false | 'pdf'>(false);
-  const [exportError, setExportError] = useState<string | null>(null);
-  const [copyStatus, setCopyStatus] = useState('Copy');
-  const previewRef = useRef<HTMLDivElement>(null);
+    const [htmlContent, setHtmlContent] = useState('');
+    const previewRef = useRef<HTMLDivElement>(null);
+    const [isExporting, setIsExporting] = useState(false);
 
-  useEffect(() => {
-    if (markdownContent) {
-      const parsedHtml = window.marked.parse(markdownContent);
-      setHtmlContent(parsedHtml);
-    } else {
-      setHtmlContent('');
-    }
-  }, [markdownContent]);
+    useEffect(() => {
+        if (markdownContent) {
+            const parsedHtml = window.marked.parse(markdownContent);
+            setHtmlContent(parsedHtml);
+        } else {
+            setHtmlContent('');
+        }
+    }, [markdownContent]);
 
-  useEffect(() => {
-    if (exportError) {
-      const timer = setTimeout(() => setExportError(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [exportError]);
+    const handleDownloadPDF = async () => {
+        if (!previewRef.current) return;
+        setIsExporting(true);
 
-  const handleCopyMarkdown = () => {
-    if (!markdownContent) return;
-    navigator.clipboard.writeText(markdownContent).then(() => {
-        setCopyStatus('Copied!');
-        setTimeout(() => setCopyStatus('Copy'), 2000);
-    }).catch(err => {
-        console.error('Failed to copy text: ', err);
-        setCopyStatus('Error');
-        setTimeout(() => setCopyStatus('Copy'), 2000);
-    });
-  };
-
-  const handleExportPDF = async () => {
-    if (!previewRef.current || !markdownContent) return;
-
-    setIsExporting('pdf');
-    setExportError(null);
-    try {
         const { jsPDF } = window.jspdf;
-        const canvas = await window.html2canvas(previewRef.current, {
-            scale: 2, // Higher scale for better quality
-        });
-        const imgData = canvas.toDataURL('image/png');
-        
         const pdf = new jsPDF({
             orientation: 'portrait',
-            unit: 'mm',
+            unit: 'pt',
             format: 'a4',
+            putOnlyUsedFonts: true,
+            floatPrecision: 16
+        });
+
+        const canvas = await window.html2canvas(previewRef.current, {
+            scale: 2, // Higher scale for better quality
+            useCORS: true,
+            logging: false,
+            width: previewRef.current.scrollWidth,
+            height: previewRef.current.scrollHeight
         });
         
-        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const imgData = canvas.toDataURL('image/png');
         const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
         
         let heightLeft = pdfHeight;
         let position = 0;
-
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        
         pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pdf.internal.pageSize.getHeight();
-
-        while (heightLeft > 0) {
-            position -= pdf.internal.pageSize.getHeight();
+        heightLeft -= pageHeight;
+        
+        while (heightLeft >= 0) {
+            position = heightLeft - pdfHeight;
             pdf.addPage();
             pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-            heightLeft -= pdf.internal.pageSize.getHeight();
+            heightLeft -= pageHeight;
         }
         
         pdf.save('cv.pdf');
-
-    } catch (err) {
-        console.error("Failed to export PDF", err);
-        setExportError("Sorry, there was an error exporting the PDF. Please try again.");
-    } finally {
         setIsExporting(false);
-    }
-  };
+    };
 
-  const renderContent = () => {
-    if (isLoading) return <LoadingSkeleton />;
-    if (error) return <div className="text-center text-red-600 bg-red-50 p-4 rounded-md">{error}</div>;
-    if (!markdownContent && (!portfolio || portfolio.length === 0)) return <Placeholder />;
+    const photoAlignmentOptions: Option<'left' | 'right' | 'none'>[] = [
+        { id: 'left', label: 'Left' },
+        { id: 'right', label: 'Right' },
+        { id: 'none', label: 'Hide' },
+    ];
+     const photoSizeOptions: Option<'small' | 'medium' | 'large'>[] = [
+        { id: 'small', label: 'S' },
+        { id: 'medium', label: 'M' },
+        { id: 'large', label: 'L' },
+    ];
 
     return (
-        <div ref={previewRef} className="p-2">
-             <div className="cv-preview-content">
-                {videoUrl && (
-                     <div className={`video-presentation-section size-${videoSize} align-${videoAlignment}`}>
-                        <h2>Video Presentation</h2>
-                        {getVideoEmbed(videoUrl)}
-                    </div>
-                )}
-                <div
-                  dangerouslySetInnerHTML={{ __html: htmlContent }}
-                />
-                {portfolio && portfolio.length > 0 && (
-                  <div className="portfolio-gallery-section">
-                      <h2>Portfolio</h2>
-                      <div className="portfolio-grid">
-                          {portfolio.map(item => (
-                              <div key={item.id} className="portfolio-card">
-                                  <a href={item.link} target="_blank" rel="noopener noreferrer" className="portfolio-image-link">
-                                      <img 
-                                        src={item.imageUrl} 
-                                        alt={item.title} 
-                                        className="portfolio-image" 
-                                        onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/400x250?text=Image+not+found' }}
-                                      />
-                                  </a>
-                                  <div className="portfolio-card-content">
-                                      <h3>
-                                          <a href={item.link} target="_blank" rel="noopener noreferrer">
-                                              {item.title}
-                                          </a>
-                                      </h3>
-                                      <p>{item.description}</p>
-                                  </div>
-                              </div>
-                          ))}
-                      </div>
-                  </div>
-                )}
-            </div>
-        </div>
-    );
-  }
-
-  return (
-    <div className="bg-white/80 backdrop-blur-sm p-6 sm:p-8 rounded-lg shadow-lg sticky top-24 border border-stone-200/50">
-        <CVPreviewStyles />
-        <div className="flex flex-wrap justify-between items-center mb-6 border-b border-stone-200 pb-3 gap-4">
-            <h2 className="text-2xl font-bold text-stone-900">CV Preview</h2>
-            <div className='w-full'>
-                <div className="flex items-center space-x-2">
-                     <button
-                        onClick={handleCopyMarkdown}
-                        disabled={!markdownContent || isLoading || !!isExporting}
-                        className="flex items-center justify-center px-3 py-2 border border-stone-300 text-sm font-medium rounded-md shadow-sm text-stone-700 bg-white hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-stone-200 disabled:text-stone-500 disabled:cursor-not-allowed"
-                    >
-                        <ClipboardIcon className="w-5 h-5 mr-2" /> {copyStatus}
-                    </button>
+        <div className="sticky top-[100px] h-[calc(100vh-120px)] flex flex-col">
+            <CVPreviewStyles />
+            <div className="flex-shrink-0 bg-white/60 backdrop-blur-lg rounded-t-xl shadow-lg shadow-green-200/30 border border-white/30 p-4 space-y-4">
+                <TemplateSelector selectedTemplate={selectedTemplate} onTemplateChange={onTemplateChange} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     <OptionSelector
+                        label="Photo Alignment"
+                        options={photoAlignmentOptions}
+                        selectedOption={photoAlignment}
+                        onChange={onPhotoAlignmentChange}
+                    />
+                     <OptionSelector
+                        label="Photo Size"
+                        options={photoSizeOptions}
+                        selectedOption={photoSize}
+                        onChange={onPhotoSizeChange}
+                    />
+                </div>
+                 <FontSelector selectedFontPair={fontPair} onChange={onFontPairChange} />
+                <div className="pt-4 border-t border-green-100/80">
                     <button
-                        onClick={handleExportPDF}
-                        disabled={!markdownContent || isLoading || !!isExporting}
-                        className="flex items-center justify-center px-3 py-2 border border-stone-300 text-sm font-medium rounded-md shadow-sm text-stone-700 bg-white hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-stone-200 disabled:text-stone-500 disabled:cursor-not-allowed"
-                    >
-                        {isExporting === 'pdf' ? 'Exporting...' : <><DownloadIcon className="w-5 h-5 mr-2" /> PDF</>}
-                    </button>
-                     <button
                         onClick={onGenerate}
-                        disabled={isLoading || !!isExporting}
-                        className="ml-auto flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300 disabled:cursor-not-allowed"
+                        disabled={isLoading}
+                        className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300 disabled:from-stone-300 disabled:to-stone-400 disabled:shadow-none disabled:transform-none"
                     >
-                        {isLoading ? (
-                            <>
-                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Generating...
-                            </>
-                        ) : (
-                            <>
-                                <SparklesIcon className="w-5 h-5 mr-2" />
-                                Generate
-                            </>
-                        )}
+                        <SparklesIcon className="w-5 h-5 mr-2" />
+                        {isLoading ? 'Generating...' : 'Generate / Update CV'}
                     </button>
                 </div>
             </div>
-        </div>
-        
-        {exportError && (
-          <div className="mb-4 flex items-center space-x-2 text-sm text-red-600 bg-red-50 p-3 rounded-md">
-              <XCircleIcon className="h-5 w-5" />
-              <span>{exportError}</span>
-          </div>
-        )}
+            
+            <div className="flex-grow bg-white rounded-b-xl shadow-lg shadow-green-200/30 overflow-y-auto p-2 border border-t-0 border-white/30 relative">
+                <div 
+                    ref={previewRef} 
+                    className={`cv-preview-content p-8 template-${selectedTemplate} font-pair-${fontPair} photo-size-${photoSize}`}
+                >
+                    {isLoading && !markdownContent && <LoadingSkeleton />}
+                    {!isLoading && error && (
+                        <div className="flex items-center space-x-2 text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                           <XCircleIcon className="h-5 w-5" />
+                           <span>{error}</span>
+                        </div>
+                    )}
+                    {!isLoading && !error && !markdownContent && <Placeholder />}
+                    <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+                </div>
+            </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-x-8'>
-            <TemplateSelector 
-                selectedTemplate={selectedTemplate}
-                onTemplateChange={onTemplateChange}
-            />
-             <div className='space-y-6'>
-                <OptionSelector
-                    label="Photo Alignment"
-                    options={[
-                        { id: 'left', label: 'Left' },
-                        { id: 'right', label: 'Right' },
-                        { id: 'none', label: 'None' },
-                    ]}
-                    selectedOption={photoAlignment}
-                    onChange={onPhotoAlignmentChange}
-                />
-                <OptionSelector
-                    label="Video Alignment"
-                    options={[
-                        { id: 'left', label: 'Left' },
-                        { id: 'right', label: 'Right' },
-                        { id: 'center', label: 'Center' },
-                        { id: 'full', label: 'Full Width' },
-                    ]}
-                    selectedOption={videoAlignment}
-                    onChange={onVideoAlignmentChange}
-                />
-                <OptionSelector
-                    label="Photo Size"
-                    options={[
-                        { id: 'small', label: 'Small' },
-                        { id: 'medium', label: 'Medium' },
-                        { id: 'large', label: 'Large' },
-                    ]}
-                    selectedOption={photoSize}
-                    onChange={onPhotoSizeChange}
-                />
-                <OptionSelector
-                    label="Video Size"
-                    options={[
-                        { id: 'small', label: 'Small' },
-                        { id: 'medium', label: 'Medium' },
-                        { id: 'large', label: 'Large' },
-                    ]}
-                    selectedOption={videoSize}
-                    onChange={onVideoSizeChange}
-                />
-                 <FontSelector
-                    selectedFontPair={fontPair}
-                    onChange={onFontPairChange}
-                />
+             <div className="flex-shrink-0 mt-4">
+                <button
+                    onClick={handleDownloadPDF}
+                    disabled={isExporting || !markdownContent}
+                    className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300 disabled:from-stone-300 disabled:to-stone-400 disabled:shadow-none disabled:transform-none"
+                >
+                    <DownloadIcon className="w-5 h-5 mr-2" />
+                    {isExporting ? 'Exporting PDF...' : 'Download as PDF'}
+                </button>
             </div>
         </div>
-        
-        <div className={`template-${selectedTemplate} font-pair-${fontPair} photo-size-${photoSize}`}>
-            <div className="min-h-[600px] border border-stone-200 rounded-lg p-4 bg-white shadow-inner">
-                {renderContent()}
-            </div>
-        </div>
-    </div>
-  );
+    );
 };

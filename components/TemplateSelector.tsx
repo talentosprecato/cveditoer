@@ -143,7 +143,7 @@ const TechnicalSVG = () => (
 
 
 const TemplatePreview: React.FC<{ id: string }> = ({ id }) => {
-    const baseClasses = "w-full h-20 mb-3 rounded-md border bg-stone-50/50 border-stone-200 p-1.5 transition-colors duration-200 group-hover:border-indigo-300";
+    const baseClasses = "w-full h-20 mb-3 rounded-md border bg-stone-50/50 border-stone-200 p-1.5 transition-colors duration-200 group-hover:border-teal-300";
     
     const svgs: Record<string, React.ReactNode> = {
         'modern': <SingleColumnSVG />,
@@ -176,22 +176,22 @@ interface TemplateSelectorProps {
 export const TemplateSelector: React.FC<TemplateSelectorProps> = ({ selectedTemplate, onTemplateChange }) => {
   return (
     <div className="mb-6">
-      <h3 className="text-lg font-semibold text-stone-800 mb-3">Choose a Template</h3>
+      <h3 className="text-lg font-semibold text-stone-800 mb-3 font-['Poppins']">Choose a Template</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {templates.map((template) => (
           <div key={template.id} className="relative group">
             <button
               onClick={() => onTemplateChange(template.id)}
-              className={`w-full h-full p-3 border rounded-lg text-left transition-all duration-200 flex flex-col items-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+              className={`w-full h-full p-3 border rounded-lg text-left transition-all duration-200 flex flex-col items-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${
                 selectedTemplate === template.id
-                  ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                  : 'border-stone-200 bg-white text-stone-600 hover:border-indigo-500 hover:text-indigo-600'
+                  ? 'border-teal-500 bg-teal-50 text-teal-700'
+                  : 'border-stone-200 bg-white/70 text-stone-600 hover:border-teal-500 hover:text-teal-600'
               }`}
               aria-pressed={selectedTemplate === template.id}
             >
               <TemplatePreview id={template.id} />
-              <p className={`font-semibold text-sm transition-colors ${selectedTemplate === template.id ? 'text-indigo-900' : 'text-stone-800 group-hover:text-indigo-700'}`}>{template.name}</p>
-              <p className={`text-xs mt-1 text-center transition-colors ${selectedTemplate === template.id ? 'text-indigo-700' : 'text-stone-600 group-hover:text-indigo-600'}`}>{template.description}</p>
+              <p className={`font-semibold text-sm transition-colors ${selectedTemplate === template.id ? 'text-teal-900' : 'text-stone-800 group-hover:text-teal-700'}`}>{template.name}</p>
+              <p className={`text-xs mt-1 text-center transition-colors ${selectedTemplate === template.id ? 'text-teal-700' : 'text-stone-600 group-hover:text-teal-600'}`}>{template.description}</p>
             </button>
             <div 
               role="tooltip"

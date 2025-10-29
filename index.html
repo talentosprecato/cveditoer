@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Veravox AI CV Editor for us</title>
+    <title>Veravox AI CV Editor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -12,7 +12,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Lora:ital,wght@0,400..700;1,400..700&family=Roboto+Mono&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Lora:ital,wght@0,400..700;1,400..700&family=Poppins:wght@400;600;700;800&family=Roboto+Mono&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
   <script type="importmap">
 {
   "imports": {
@@ -26,7 +26,13 @@
 </script>
 <style>
   body {
-    background-color: #f5f3ff; /* soft violet */
+    background-color: #f0fdf4; /* A light green fallback */
+    background-image:
+      radial-gradient(at 0% 0%, hsla(160, 100%, 75%, 0.3) 0px, transparent 50%),
+      radial-gradient(at 98% 12%, hsla(45, 100%, 75%, 0.3) 0px, transparent 50%),
+      radial-gradient(at 80% 80%, hsla(28, 100%, 75%, 0.3) 0px, transparent 50%),
+      radial-gradient(at 10% 90%, hsla(180, 100%, 75%, 0.3) 0px, transparent 50%);
+    background-attachment: fixed;
   }
 </style>
 </head>

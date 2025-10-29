@@ -1,6 +1,7 @@
 
 
-import { GoogleGenAI, Type, LiveServerMessage } from "@google/genai";
+
+import { GoogleGenAI, Type, Modality, LiveServerMessage } from "@google/genai";
 import { CVData, CVDataFromAI, SectionId, JobSuggestion } from "../types.ts";
 
 let ai: GoogleGenAI | null = null;
@@ -317,58 +318,69 @@ export const parseAndEnhanceCVFromFile = async (file: File, language: string): P
         certifications: parsedJson.certifications || [],
         portfolio: [], // AI doesn't generate this from text
         professionalNarrative: parsedJson.professionalNarrative || '',
-        videoUrl: '', // Not parsed from text
         signature: ''
     };
     
     return result;
 };
 
-
+// FIX: Added generateVideoScript function to be used by the VideoRecorderModal component.
 export const generateVideoScript = async (cvData: CVData, language: string): Promise<string> => {
     const localAi = getAiInstance();
     const languageInstruction = languagePrompts[language] || languagePrompts.en;
-    
+
     const response = await localAi.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: `Based on the following CV data, write a short and compelling script (around 60 seconds of speaking time) for a video presentation. The script should be a professional and engaging "elevator pitch".
-        
+        model: "gemini-2.5-pro",
+        contents: `Based on the provided CV, generate a short and compelling script for a 60-second video presentation. The script should be engaging and highlight the candidate's key strengths and experiences. The script should be easy to read aloud.
+
         Instructions:
-        - The tone should be confident and professional.
-        - Start with a brief introduction.
-        - Highlight 2-3 key achievements or skills from the experience/projects sections.
-        - Conclude with a call to action (e.g., "I'm excited to bring my skills to a challenging new role and would welcome the opportunity to discuss how I can contribute to your team.").
-        - The entire script should be in this language: ${languageInstruction}.
-        - Output only the script text, with no preamble or extra formatting.
+        - The tone should be professional yet conversational.
+        - The script should be divided into a brief introduction, a body highlighting 2-3 key achievements or skills, and a strong conclusion with a call to action (e.g., "I'm excited to discuss how my skills can benefit your team.").
+        - Keep the total length to around 150-180 words to fit within 60 seconds.
+        - Generate the script in this language: ${languageInstruction}.
+        - Output only the script content, without any titles like "Video Script:" or surrounding quotes.
 
         CV Data:
-        ${JSON.stringify(cvData, null, 2)}`
+        ${JSON.stringify(cvData, null, 2)}
+        `
     });
+
     return response.text;
 };
 
-export const startLiveTranscriptionSession = async (
+// FIX: Added startLiveTranscriptionSession function for real-time subtitles in the VideoRecorderModal.
+export const startLiveTranscriptionSession = (
     onMessage: (message: LiveServerMessage) => void,
-    onError: (e: Event) => void,
-    language: string
-) => {
+    onError: (error: Event) => void,
+    // Language parameter is kept for potential future use with languageCode in API
+    _language: string
+): Promise<{
+    sendRealtimeInput: (input: { media: { data: string; mimeType: string; }; }) => void;
+    close: () => void;
+}> => {
     const localAi = getAiInstance();
-    const languageCode = language.split('-')[0]; // Use base language code for BCP-47
-    
-    return localAi.live.connect({
+
+    const sessionPromise = localAi.live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-09-2025',
         callbacks: {
-            onopen: () => console.debug('Live session opened'),
+            onopen: () => {
+                console.debug('Live transcription session opened.');
+            },
             onmessage: onMessage,
-            onerror: (e) => onError(e as Event),
-            onclose: () => console.debug('Live session closed'),
-        },
-        config: {
-            inputAudioTranscription: {
-                bcp47LanguageCode: languageCode,
+            onerror: onError,
+            onclose: () => {
+                console.debug('Live transcription session closed.');
             },
         },
+        config: {
+            // responseModalities is required by the Live API, even if we don't process the output audio.
+            responseModalities: [Modality.AUDIO],
+            // We only need transcription for the user's input.
+            inputAudioTranscription: {},
+        },
     });
+
+    return sessionPromise;
 };
 
 const jobSuggestionsSchema = {

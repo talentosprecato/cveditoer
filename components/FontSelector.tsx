@@ -30,7 +30,7 @@ export const FontSelector: React.FC<FontSelectorProps> = ({ selectedFontPair, on
               onClick={() => onChange(pair.id)}
               className={`w-full rounded py-1.5 text-sm font-medium transition-colors ${
                 selectedFontPair === pair.id
-                  ? 'bg-white shadow-sm text-indigo-600'
+                  ? 'bg-white shadow-sm text-teal-600'
                   : 'text-stone-600 hover:bg-stone-200'
               }`}
               aria-pressed={selectedFontPair === pair.id}

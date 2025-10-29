@@ -74,7 +74,6 @@ export interface CVData {
   certifications: Certification[];
   portfolio: PortfolioItem[];
   professionalNarrative: string;
-  videoUrl: string;
   signature: string;
 }
 

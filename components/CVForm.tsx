@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { CVData, PersonalDetails, Experience, Education, SectionId, Project, Certification, PortfolioItem, SocialLink } from '../types.ts';
-import { PlusIcon, TrashIcon, SparklesIcon, DragHandleIcon, UploadIcon, FileIcon, XCircleIcon, RecordIcon, VideoPlusIcon, CameraIcon, BriefcaseIcon, CheckCircleIcon, SearchIcon, MailIcon, LinkIcon, FacebookIcon, InstagramIcon, TwitterIcon, GithubIcon } from './icons.tsx';
-import { VideoRecorderModal } from './VideoRecorderModal.tsx';
+// FIX: Import the missing CameraIcon component.
+import { PlusIcon, TrashIcon, SparklesIcon, DragHandleIcon, UploadIcon, FileIcon, XCircleIcon, BriefcaseIcon, CheckCircleIcon, SearchIcon, MailIcon, LinkIcon, FacebookIcon, InstagramIcon, TwitterIcon, GithubIcon, UserIcon, AcademicCapIcon, CodeBracketIcon, FolderIcon, TrophyIcon, PhotoIcon, ChatBubbleLeftRightIcon, SignatureIcon, ChevronDownIcon, CameraIcon } from './icons.tsx';
 import { SignaturePad } from './SignaturePad.tsx';
 
 interface CVFormProps {
@@ -34,7 +34,6 @@ interface CVFormProps {
   onRemovePortfolioItem: (id: string) => void;
   onReorderPortfolioItem: (startIndex: number, endIndex: number) => void;
   onProfessionalNarrativeChange: (value: string) => void;
-  onVideoUrlChange: (url: string) => void;
   onSignatureChange: (base64: string) => void;
   sections: SectionId[];
   onSectionOrderChange: (sections: SectionId[]) => void;
@@ -45,15 +44,30 @@ interface CVFormProps {
   onOpenCoverLetterModal: () => void;
 }
 
-const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="space-y-4 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-md border border-stone-200/50">
-    <div className="flex items-center justify-between border-b border-stone-200 pb-2 cursor-grab active:cursor-grabbing">
-        <h3 className="text-xl font-semibold text-stone-800">{title}</h3>
-        <DragHandleIcon className="w-6 h-6 text-stone-400" />
+const Section: React.FC<{ title: string; children: React.ReactNode; icon: React.ReactNode; isOpen: boolean; onToggle: () => void; dragHandle: React.ReactNode; }> = ({ title, children, icon, isOpen, onToggle, dragHandle }) => (
+  <div className="bg-white/60 backdrop-blur-lg rounded-xl shadow-lg shadow-green-200/30 border border-white/30">
+    <div className="flex items-center justify-between p-4 border-b border-green-100/80">
+        <button onClick={onToggle} className="flex items-center space-x-3 text-left flex-grow min-w-0">
+          <span className="flex-shrink-0">{icon}</span>
+          <h3 className="text-xl font-semibold text-stone-800 truncate font-['Poppins']">{title}</h3>
+        </button>
+        <div className="flex items-center space-x-2 pl-4">
+          {dragHandle}
+          <button onClick={onToggle} className="p-1 rounded-full hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-teal-500">
+             <ChevronDownIcon className={`w-5 h-5 text-stone-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+          </button>
+        </div>
     </div>
-    {children}
+    <div className={`grid transition-all duration-500 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+      <div className="overflow-hidden">
+        <div className="p-4">
+            {children}
+        </div>
+      </div>
+    </div>
   </div>
 );
+
 
 const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: string; icon?: React.ReactNode }> = ({ label, icon, ...props }) => (
   <div>
@@ -66,7 +80,7 @@ const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: str
         )}
         <input
             {...props}
-            className={`w-full px-3 py-2 border border-stone-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white/50 ${icon ? 'pl-10' : ''}`}
+            className={`w-full px-3 py-2 border border-stone-300 rounded-md focus:ring-teal-500 focus:border-teal-500 sm:text-sm bg-white/50 ${icon ? 'pl-10' : ''}`}
         />
     </div>
   </div>
@@ -78,44 +92,10 @@ const Textarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement> & { l
     <textarea
       {...props}
       rows={4}
-      className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white/50"
+      className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm bg-white/50"
     />
   </div>
 );
-
-const renderVideoPreview = (url: string) => {
-    if (!url) return null;
-
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/;
-    const youtubeMatch = url.match(youtubeRegex);
-    if (youtubeMatch && youtubeMatch[1]) {
-        const videoId = youtubeMatch[1];
-        return (
-            <iframe
-              className='max-h-full max-w-full rounded-md shadow-inner w-full h-full'
-              src={`https://www.youtube.com/embed/${videoId}`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              title="Embedded YouTube Video"
-            ></iframe>
-        );
-    }
-    
-    if (url.startsWith('blob:') || url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.ogg')) {
-        return <video key={url} controls src={url} className='max-h-full max-w-full rounded-md shadow-inner'></video>;
-    }
-
-    // Fallback for other URLs
-    return (
-        <div className="w-full h-full flex items-center justify-center bg-stone-100 p-4 rounded-md">
-            <div className='text-center'>
-                <p className="text-sm text-stone-700">Video link added:</p>
-                <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-indigo-600 hover:underline break-all">{url}</a>
-            </div>
-        </div>
-    );
-};
-
 
 export const CVForm: React.FC<CVFormProps> = ({
   cvData,
@@ -147,7 +127,6 @@ export const CVForm: React.FC<CVFormProps> = ({
   onRemovePortfolioItem,
   onReorderPortfolioItem,
   onProfessionalNarrativeChange,
-  onVideoUrlChange,
   onSignatureChange,
   sections,
   onSectionOrderChange,
@@ -160,6 +139,7 @@ export const CVForm: React.FC<CVFormProps> = ({
   const sectionDragItem = useRef<number | null>(null);
   const sectionDragOverItem = useRef<number | null>(null);
   const [isSectionDragging, setIsSectionDragging] = useState(false);
+  const [activeSection, setActiveSection] = useState<SectionId | null>('personal');
   
   const expDragItem = useRef<number | null>(null);
   const expDragOverItem = useRef<number | null>(null);
@@ -181,14 +161,14 @@ export const CVForm: React.FC<CVFormProps> = ({
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
 
-  const [isVideoRecorderOpen, setIsVideoRecorderOpen] = useState(false);
-  const [videoError, setVideoError] = useState<string | null>(null);
-  const [videoUrlInput, setVideoUrlInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSectionToggle = (sectionId: SectionId) => {
+    setActiveSection(prev => prev === sectionId ? null : sectionId);
+  };
 
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -287,35 +267,6 @@ export const CVForm: React.FC<CVFormProps> = ({
       onPhotoChange('');
   }
 
-  const handleVideoFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-        const file = event.target.files[0];
-        if (file.size > 50 * 1024 * 1024) { // 50MB limit
-            setVideoError('File size should not exceed 50MB.');
-            return;
-        }
-        setVideoError(null);
-        const url = URL.createObjectURL(file);
-        onVideoUrlChange(url);
-    }
-  };
-  
-  const handleVideoUrlInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setVideoUrlInput(e.target.value);
-  };
-  
-  const handleVideoUrlInputBlur = () => {
-    if(videoUrlInput) {
-        onVideoUrlChange(videoUrlInput);
-    }
-  };
-  
-  const handleVideoSave = (videoBlob: Blob) => {
-    const url = URL.createObjectURL(videoBlob);
-    onVideoUrlChange(url);
-    setIsVideoRecorderOpen(false);
-  };
-
   const sectionMatchesQuery = useCallback((sectionId: SectionId, query: string): boolean => {
     const lowerCaseQuery = query.toLowerCase();
     if (!lowerCaseQuery) return true;
@@ -384,10 +335,40 @@ export const CVForm: React.FC<CVFormProps> = ({
   };
 
   const photoToShow = photoPreviewUrl || cvData.personal.photo;
+  
+  const sectionIconProps = { className: "w-6 h-6 text-teal-500" };
+  const sectionIcons: Record<SectionId, React.ReactNode> = {
+    personal: <UserIcon {...sectionIconProps} />,
+    experience: <BriefcaseIcon {...sectionIconProps} />,
+    education: <AcademicCapIcon {...sectionIconProps} />,
+    skills: <CodeBracketIcon {...sectionIconProps} />,
+    projects: <FolderIcon {...sectionIconProps} />,
+    certifications: <TrophyIcon {...sectionIconProps} />,
+    portfolio: <PhotoIcon {...sectionIconProps} />,
+    professionalNarrative: <ChatBubbleLeftRightIcon {...sectionIconProps} />,
+    signature: <SignatureIcon {...sectionIconProps} />,
+    coverLetter: <MailIcon {...sectionIconProps} />,
+    jobSearch: <BriefcaseIcon {...sectionIconProps} />,
+  };
+  
+  const sectionTitles: Record<SectionId, string> = {
+      personal: 'Personal Details',
+      experience: 'Work Experience',
+      education: 'Education',
+      skills: 'Skills',
+      projects: 'Projects',
+      certifications: 'Certifications',
+      portfolio: 'Portfolio Gallery',
+      professionalNarrative: 'Professional Narrative',
+      jobSearch: 'Job Opportunity Finder',
+      coverLetter: 'Cover Letter Composer',
+      signature: 'Signature',
+  };
+
 
   const sectionsMap: Record<SectionId, React.ReactNode> = {
     personal: (
-      <Section title="Personal Details">
+      <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Full Name" value={cvData.personal.fullName} onChange={(e) => onPersonalChange('fullName', e.target.value)} />
             <Input 
@@ -407,7 +388,7 @@ export const CVForm: React.FC<CVFormProps> = ({
             <Input label="Twitter Profile URL" value={cvData.personal.twitter} onChange={(e) => onPersonalChange('twitter', e.target.value)} />
         </div>
 
-        <div className="mt-4 pt-4 border-t border-stone-200 space-y-4">
+        <div className="mt-4 pt-4 border-t border-green-100/80 space-y-4">
             <h4 className="text-sm font-semibold text-stone-700">Social & Other Links</h4>
              <div className="space-y-3">
                 {cvData.personal.socialLinks.map((link, index) => (
@@ -432,35 +413,35 @@ export const CVForm: React.FC<CVFormProps> = ({
                                     placeholder="Platform (e.g., Facebook)"
                                     value={link.platform}
                                     onChange={(e) => onUpdateSocialLink(link.id, 'platform', e.target.value)}
-                                    className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white/50"
+                                    className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm bg-white/50"
                                 />
                                 <input
                                     type="url"
                                     placeholder="URL"
                                     value={link.url}
                                     onChange={(e) => onUpdateSocialLink(link.id, 'url', e.target.value)}
-                                    className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white/50"
+                                    className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500 sm:text-sm bg-white/50"
                                 />
                             </div>
-                            <button onClick={() => onRemoveSocialLink(link.id)} className="text-stone-400 hover:text-indigo-500">
+                            <button onClick={() => onRemoveSocialLink(link.id)} className="text-stone-400 hover:text-orange-500">
                                 <TrashIcon className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
                 ))}
             </div>
-            <button onClick={onAddSocialLink} className="flex items-center space-x-2 text-sm font-medium text-indigo-600 hover:text-indigo-800">
+            <button onClick={onAddSocialLink} className="flex items-center space-x-2 text-sm font-medium text-teal-600 hover:text-orange-600">
                 <PlusIcon className="w-5 h-5" />
                 <span>Add Link</span>
             </button>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-stone-200 space-y-6">
+        <div className="mt-4 pt-4 border-t border-green-100/80 space-y-6">
             <div>
                 <label className="block text-sm font-medium text-stone-700 mb-2">Profile Photo</label>
                 <div className="flex items-center space-x-4">
                     {photoToShow ? (
-                        <img src={photoToShow} alt="Profile" className={`w-16 h-16 rounded-full object-cover transition-all ${photoPreviewUrl ? 'ring-2 ring-indigo-500 ring-offset-2' : ''}`} />
+                        <img src={photoToShow} alt="Profile" className={`w-16 h-16 rounded-full object-cover transition-all ${photoPreviewUrl ? 'ring-2 ring-teal-500 ring-offset-2' : ''}`} />
                     ) : (
                         <div className="w-16 h-16 rounded-full bg-stone-200 flex items-center justify-center text-stone-500">
                             <CameraIcon className="w-8 h-8" />
@@ -472,7 +453,7 @@ export const CVForm: React.FC<CVFormProps> = ({
                         <div className="flex items-center space-x-2">
                              <button
                                 onClick={handleConfirmPhoto}
-                                className="px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                                className="px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300"
                             >
                                 Confirm
                             </button>
@@ -492,7 +473,7 @@ export const CVForm: React.FC<CVFormProps> = ({
                                 {cvData.personal.photo ? 'Change Photo' : 'Upload Photo'}
                             </button>
                             {cvData.personal.photo && (
-                                <button onClick={handleRemovePhoto} className="flex items-center space-x-1.5 px-3 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-50 hover:text-indigo-600">
+                                <button onClick={handleRemovePhoto} className="flex items-center space-x-1.5 px-3 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-50 hover:text-orange-600">
                                     <TrashIcon className="w-4 h-4"/>
                                     <span>Remove</span>
                                 </button>
@@ -501,61 +482,11 @@ export const CVForm: React.FC<CVFormProps> = ({
                     )}
                 </div>
             </div>
-            
-            <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">Profile Video</label>
-                <div className="flex items-start space-x-4">
-                    <div className="w-16 h-16 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 flex-shrink-0">
-                        {cvData.videoUrl ? (
-                           <CheckCircleIcon className="w-8 h-8 text-green-500" />
-                        ) : (
-                            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                <rect x="6" y="6" width="12" height="12" rx="1"></rect>
-                            </svg>
-                        )}
-                    </div>
-                    <div className="flex-grow">
-                        <input type="file" accept="video/*" onChange={handleVideoFileChange} ref={videoInputRef} className="hidden" />
-                        <button onClick={() => videoInputRef.current?.click()} className="px-3 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-50">
-                            Upload Video
-                        </button>
-                        <div className="mt-2 text-xs text-stone-500">
-                            Or{' '}
-                            <button onClick={() => setIsVideoRecorderOpen(true)} className="text-indigo-600 hover:underline">record a new one</button>.
-                        </div>
-                    </div>
-                </div>
-                 <div className="mt-4">
-                    <Input 
-                        label="Or paste a video link"
-                        type="url"
-                        placeholder="e.g., https://www.youtube.com/watch?v=..."
-                        value={videoUrlInput}
-                        onChange={handleVideoUrlInputChange}
-                        onBlur={handleVideoUrlInputBlur}
-                    />
-                </div>
-                {videoError && <p className="text-sm text-indigo-600 mt-1">{videoError}</p>}
-                
-                {cvData.videoUrl && (
-                    <div className="mt-4">
-                        <div className='flex items-center justify-between mb-1'>
-                            <label className="block text-sm font-medium text-stone-700">Preview</label>
-                            <button onClick={() => onVideoUrlChange('')} className="text-indigo-600 hover:text-indigo-800 text-xs flex items-center">
-                                <TrashIcon className="w-3 h-3 mr-1" /> Remove
-                            </button>
-                        </div>
-                        <div className='w-full aspect-video bg-stone-100 rounded-md overflow-hidden'>
-                            {renderVideoPreview(cvData.videoUrl)}
-                        </div>
-                    </div>
-                )}
-            </div>
         </div>
-      </Section>
+      </>
     ),
     experience: (
-      <Section title="Work Experience">
+      <>
         <div className="space-y-4">
           {cvData.experience.map((exp, index) => (
             <div key={exp.id} 
@@ -574,7 +505,7 @@ export const CVForm: React.FC<CVFormProps> = ({
                     </div>
                     <h4 className="font-semibold text-md text-stone-800">{exp.jobTitle || 'New Position'}</h4>
                   </div>
-                <button onClick={() => onRemoveExperience(exp.id)} className="text-stone-400 hover:text-indigo-500">
+                <button onClick={() => onRemoveExperience(exp.id)} className="text-stone-400 hover:text-orange-500">
                   <TrashIcon className="w-5 h-5" />
                 </button>
               </div>
@@ -593,14 +524,14 @@ export const CVForm: React.FC<CVFormProps> = ({
             </div>
           ))}
         </div>
-        <button onClick={onAddExperience} className="mt-4 flex items-center space-x-2 text-sm font-medium text-indigo-600 hover:text-indigo-800">
+        <button onClick={onAddExperience} className="mt-4 flex items-center space-x-2 text-sm font-medium text-teal-600 hover:text-orange-600">
           <PlusIcon className="w-5 h-5" />
           <span>Add Experience</span>
         </button>
-      </Section>
+      </>
     ),
     education: (
-      <Section title="Education">
+      <>
         <div className="space-y-4">
           {cvData.education.map((edu, index) => (
              <div key={edu.id} 
@@ -619,7 +550,7 @@ export const CVForm: React.FC<CVFormProps> = ({
                       </div>
                       <h4 className="font-semibold text-md text-stone-800">{edu.degree || 'New Education'}</h4>
                   </div>
-                  <button onClick={() => onRemoveEducation(edu.id)} className="text-stone-400 hover:text-indigo-500">
+                  <button onClick={() => onRemoveEducation(edu.id)} className="text-stone-400 hover:text-orange-500">
                     <TrashIcon className="w-5 h-5" />
                   </button>
                 </div>
@@ -638,19 +569,19 @@ export const CVForm: React.FC<CVFormProps> = ({
             </div>
           ))}
         </div>
-        <button onClick={onAddEducation} className="mt-4 flex items-center space-x-2 text-sm font-medium text-indigo-600 hover:text-indigo-800">
+        <button onClick={onAddEducation} className="mt-4 flex items-center space-x-2 text-sm font-medium text-teal-600 hover:text-orange-600">
           <PlusIcon className="w-5 h-5" />
           <span>Add Education</span>
         </button>
-      </Section>
+      </>
     ),
     skills: (
-      <Section title="Skills">
+      <>
         <Textarea label="Skills (comma-separated)" value={cvData.skills} onChange={(e) => onSkillsChange(e.target.value)} />
-      </Section>
+      </>
     ),
     projects: (
-        <Section title="Projects">
+        <>
             <div className="space-y-4">
                 {cvData.projects.map((proj, index) => (
                     <div key={proj.id}
@@ -669,7 +600,7 @@ export const CVForm: React.FC<CVFormProps> = ({
                                 </div>
                                 <h4 className="font-semibold text-md text-stone-800">{proj.name || 'New Project'}</h4>
                             </div>
-                            <button onClick={() => onRemoveProject(proj.id)} className="text-stone-400 hover:text-indigo-500">
+                            <button onClick={() => onRemoveProject(proj.id)} className="text-stone-400 hover:text-orange-500">
                                 <TrashIcon className="w-5 h-5" />
                             </button>
                         </div>
@@ -686,14 +617,14 @@ export const CVForm: React.FC<CVFormProps> = ({
                     </div>
                 ))}
             </div>
-            <button onClick={onAddProject} className="mt-4 flex items-center space-x-2 text-sm font-medium text-indigo-600 hover:text-indigo-800">
+            <button onClick={onAddProject} className="mt-4 flex items-center space-x-2 text-sm font-medium text-teal-600 hover:text-orange-600">
                 <PlusIcon className="w-5 h-5" />
                 <span>Add Project</span>
             </button>
-        </Section>
+        </>
     ),
     certifications: (
-        <Section title="Certifications">
+        <>
             <div className="space-y-4">
                 {cvData.certifications.map((cert, index) => (
                     <div key={cert.id}
@@ -712,7 +643,7 @@ export const CVForm: React.FC<CVFormProps> = ({
                                 </div>
                                 <h4 className="font-semibold text-md text-stone-800">{cert.name || 'New Certification'}</h4>
                             </div>
-                            <button onClick={() => onRemoveCertification(cert.id)} className="text-stone-400 hover:text-indigo-500">
+                            <button onClick={() => onRemoveCertification(cert.id)} className="text-stone-400 hover:text-orange-500">
                                 <TrashIcon className="w-5 h-5" />
                             </button>
                         </div>
@@ -726,14 +657,14 @@ export const CVForm: React.FC<CVFormProps> = ({
                     </div>
                 ))}
             </div>
-            <button onClick={onAddCertification} className="mt-4 flex items-center space-x-2 text-sm font-medium text-indigo-600 hover:text-indigo-800">
+            <button onClick={onAddCertification} className="mt-4 flex items-center space-x-2 text-sm font-medium text-teal-600 hover:text-orange-600">
                 <PlusIcon className="w-5 h-5" />
                 <span>Add Certification</span>
             </button>
-        </Section>
+        </>
     ),
     portfolio: (
-        <Section title="Portfolio Gallery">
+        <>
             <div className="space-y-4">
                 {cvData.portfolio.map((item, index) => (
                     <div key={item.id}
@@ -752,7 +683,7 @@ export const CVForm: React.FC<CVFormProps> = ({
                                 </div>
                                 <h4 className="font-semibold text-md text-stone-800">{item.title || 'New Portfolio Item'}</h4>
                             </div>
-                            <button onClick={() => onRemovePortfolioItem(item.id)} className="text-stone-400 hover:text-indigo-500">
+                            <button onClick={() => onRemovePortfolioItem(item.id)} className="text-stone-400 hover:text-orange-500">
                                 <TrashIcon className="w-5 h-5" />
                             </button>
                         </div>
@@ -765,64 +696,69 @@ export const CVForm: React.FC<CVFormProps> = ({
                     </div>
                 ))}
             </div>
-            <button onClick={onAddPortfolioItem} className="mt-4 flex items-center space-x-2 text-sm font-medium text-indigo-600 hover:text-indigo-800">
+            <button onClick={onAddPortfolioItem} className="mt-4 flex items-center space-x-2 text-sm font-medium text-teal-600 hover:text-orange-600">
                 <PlusIcon className="w-5 h-5" />
                 <span>Add Portfolio Item</span>
             </button>
-        </Section>
+        </>
     ),
     professionalNarrative: (
-        <Section title="Professional Narrative">
+        <>
             <Textarea 
                 label="What has made you the professional you are today?" 
                 value={cvData.professionalNarrative} 
                 onChange={(e) => onProfessionalNarrativeChange(e.target.value)} 
                 rows={6}
             />
-        </Section>
+        </>
     ),
     signature: (
-      <Section title="Signature">
+      <>
         <p className="text-sm text-stone-600 mb-4">Add a handwritten signature to your CV for a personal touch. It will appear at the end of your document.</p>
-        {cvData.signature ? (
-          <div className="text-center">
-            <img src={cvData.signature} alt="User signature" className="mx-auto border bg-white p-2 rounded-md shadow-inner" />
+        
+        {/* The SignaturePad component is always visible. It contains its own 'Clear' button. */}
+        <SignaturePad onSignatureChange={onSignatureChange} />
+  
+        {/* Conditionally display the preview below the pad if a signature exists. */}
+        {cvData.signature && (
+          <div className="mt-6 text-center">
+            <h4 className="text-sm font-semibold text-stone-700 mb-2">Signature Preview</h4>
+            <div className="inline-block p-2 border bg-white rounded-md shadow-inner">
+                <img src={cvData.signature} alt="User signature" className="h-16" />
+            </div>
             <button
-              onClick={() => onSignatureChange('')}
-              className="mt-2 flex items-center mx-auto text-sm text-indigo-600 hover:text-indigo-800"
+                onClick={() => onSignatureChange('')}
+                className="ml-4 px-3 py-1.5 border border-stone-300 rounded-md text-xs font-medium text-stone-700 hover:bg-stone-50"
             >
-              <TrashIcon className="w-4 h-4 mr-1" />
-              Clear Signature
+                Clear
             </button>
           </div>
-        ) : (
-          <SignaturePad onSignatureChange={onSignatureChange} />
         )}
-      </Section>
+      </>
     ),
     coverLetter: (
-      <Section title="Cover Letter Composer">
+      <>
         <p className="text-sm text-stone-600 mb-4">Draft a tailored cover letter for a specific job you have in mind.</p>
         <button
             onClick={onOpenCoverLetterModal}
-            className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+            className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300"
         >
             <MailIcon className="w-5 h-5 mr-2" />
             Compose Cover Letter
         </button>
-      </Section>
+      </>
     ),
     jobSearch: (
-      <Section title="Job Opportunity Finder">
+      <>
         <p className="text-sm text-stone-600 mb-4">Launch the job finder to discover relevant opportunities based on your CV and target locations.</p>
         <button
             onClick={onOpenJobModal}
-            className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300 disabled:from-stone-300 disabled:to-stone-400 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed"
         >
             <BriefcaseIcon className="w-5 h-5 mr-2" />
             Launch Job Finder
         </button>
-      </Section>
+      </>
     )
   };
 
@@ -839,7 +775,7 @@ export const CVForm: React.FC<CVFormProps> = ({
               type="search"
               name="search"
               id="search"
-              className="block w-full rounded-md border-stone-300 pl-10 pr-10 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm shadow-sm bg-white/70"
+              className="block w-full rounded-md border-stone-300 pl-10 pr-10 focus:border-teal-500 focus:ring-teal-500 sm:text-sm shadow-sm bg-white/70"
               placeholder="Search sections or fields..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -853,12 +789,12 @@ export const CVForm: React.FC<CVFormProps> = ({
           )}
       </div>
 
-      <div className="bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-md border border-stone-200/50 space-y-3">
+      <div className="bg-white/60 backdrop-blur-lg p-4 rounded-xl shadow-lg shadow-green-200/30 border border-white/30 space-y-3">
         <div className="flex items-center space-x-2">
-            <SparklesIcon className="w-6 h-6 text-indigo-600" />
-            <h3 className="text-xl font-semibold text-stone-800">Enhance with AI</h3>
+            <SparklesIcon className="w-6 h-6 text-teal-500" />
+            <h3 className="text-xl font-semibold text-stone-800 font-['Poppins']">Enhance with AI</h3>
         </div>
-        <p className="text-sm text-stone-600">Have an existing CV? Upload a PDF or text file, and let AI parse and populate the form for you.</p>
+        <p className="text-sm text-stone-600">Have an existing CV? Upload a PDF, and let AI parse and populate the form for you.</p>
         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-2 sm:space-y-0">
              <div className="flex-1">
                 <label htmlFor="file-upload" className="sr-only">Choose file</label>
@@ -871,7 +807,7 @@ export const CVForm: React.FC<CVFormProps> = ({
                         Browse
                     </div>
                     <div className="relative flex-1">
-                        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".pdf,.txt" className="sr-only" id="file-upload" />
+                        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".pdf" className="sr-only" id="file-upload" />
                         <div className="block w-full px-3 py-2 border border-stone-300 rounded-r-md text-sm text-stone-700 truncate bg-white/50">
                             {selectedFile ? (
                                 <span className='flex items-center'>
@@ -891,7 +827,7 @@ export const CVForm: React.FC<CVFormProps> = ({
             <button
                 onClick={handleEnhanceClick}
                 disabled={!selectedFile || isEnhancing}
-                className="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed"
+                className="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300 disabled:from-stone-300 disabled:to-stone-400 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed"
             >
                 {isEnhancing ? (
                     <>
@@ -908,7 +844,7 @@ export const CVForm: React.FC<CVFormProps> = ({
         return (
           <div
             key={sectionId}
-            draggable={!searchQuery}
+            draggable={!searchQuery && activeSection === null}
             onDragStart={(e) => handleSectionDragStart(e, index)}
             onDragEnter={(e) => handleSectionDragEnter(e, index)}
             onDragEnd={handleSectionDragEnd}
@@ -916,23 +852,28 @@ export const CVForm: React.FC<CVFormProps> = ({
             onDragOver={(e) => e.preventDefault()}
             className={`transition-opacity ${isSectionDragging && sectionDragItem.current === index ? 'opacity-30' : 'opacity-100'} ${!isVisible ? 'hidden' : ''}`}
           >
-            {sectionsMap[sectionId]}
+            <Section
+                title={sectionTitles[sectionId]}
+                icon={sectionIcons[sectionId]}
+                isOpen={activeSection === sectionId && !searchQuery}
+                onToggle={() => handleSectionToggle(sectionId)}
+                dragHandle={
+                    <div className="cursor-grab active:cursor-grabbing" onMouseDown={(e) => e.stopPropagation()}>
+                        <DragHandleIcon className="w-6 h-6 text-stone-400" />
+                    </div>
+                }
+            >
+                {sectionsMap[sectionId]}
+            </Section>
           </div>
         );
       })}
       {noSearchResults && (
-        <div className="text-center py-8 text-stone-500 bg-white/80 backdrop-blur-sm rounded-lg border border-stone-200/50">
+        <div className="text-center py-8 text-stone-500 bg-white/60 backdrop-blur-lg rounded-xl border border-white/30">
           <p className="font-medium">No results found</p>
           <p className="text-sm mt-1">No sections match your search for "{searchQuery}".</p>
         </div>
       )}
-      <VideoRecorderModal
-        isOpen={isVideoRecorderOpen}
-        onClose={() => setIsVideoRecorderOpen(false)}
-        onSave={handleVideoSave}
-        cvData={cvData}
-        language={language}
-      />
     </div>
   );
 };

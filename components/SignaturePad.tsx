@@ -97,7 +97,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ onSignatureChange })
       />
       <button
         onClick={clearCanvas}
-        className="mt-2 text-sm font-medium text-indigo-600 hover:text-indigo-800"
+        className="mt-2 text-sm font-medium text-teal-600 hover:text-teal-800"
       >
         Clear
       </button>

@@ -44,12 +44,12 @@ export const EnhancePreviewModal: React.FC<EnhancePreviewModalProps> = ({ markdo
         <main className="p-6 overflow-y-auto">
           { !htmlContent ? (
             <div className="text-center py-12">
-                <svg className="animate-spin mx-auto h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <svg className="animate-spin mx-auto h-8 w-8 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 <p className="mt-2 text-sm text-stone-500">Generating preview...</p>
             </div>
           ) : (
             <div
-              className="prose prose-indigo max-w-none"
+              className="prose prose-teal max-w-none"
               dangerouslySetInnerHTML={{ __html: htmlContent }}
             />
           )}
@@ -57,13 +57,13 @@ export const EnhancePreviewModal: React.FC<EnhancePreviewModalProps> = ({ markdo
         <footer className="p-4 bg-stone-50 border-t flex justify-end space-x-4">
           <button
             onClick={onCancel}
-            className="px-4 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="px-4 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
           >
             Cancel
           </button>
           <button
             onClick={onAccept}
-            className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
           >
             Accept & Populate Form
           </button>
@@ -83,11 +83,11 @@ export const EnhancePreviewModal: React.FC<EnhancePreviewModalProps> = ({ markdo
         .animate-fade-in-scale {
           animation: fade-in-scale 0.3s ease-out forwards;
         }
-        .prose-indigo a {
-            color: #4f46e5;
+        .prose-teal a {
+            color: #0d9488;
         }
-        .prose-indigo a:hover {
-            color: #4338ca;
+        .prose-teal a:hover {
+            color: #115e59;
         }
       `}</style>
     </div>
