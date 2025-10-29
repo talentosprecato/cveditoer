@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { CVData } from '../types.ts';
 import { generateVideoScript, startLiveTranscriptionSession } from '../services/geminiService.ts';
@@ -421,12 +419,13 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
 
   const handleGenerateScript = async () => {
     setIsGeneratingScript(true);
+    setError(null);
     try {
       const generatedScript = await generateVideoScript(cvData, language);
       setScript(generatedScript);
     } catch (e) {
       console.error(e);
-      alert("Failed to generate script. Please try again.");
+      setError("Failed to generate script. Please check your connection and try again.");
     } finally {
       setIsGeneratingScript(false);
     }
@@ -442,12 +441,12 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
     <div className="absolute inset-0 bg-stone-800 flex flex-col items-center justify-center text-white p-8 text-center z-20">
         <CameraIcon className="w-16 h-16 text-teal-400 mb-4" />
         <h3 className="text-xl font-bold mb-2">Enable Camera & Microphone</h3>
-        <p className="text-stone-300 mb-6 max-w-sm">To record your video presentation, we need access to your camera and microphone. We'll only use them for the recording session.</p>
+        <p className="text-stone-300 mb-6 max-w-sm">This application will allow you to take videos and photos to enrich your resume. For this, I ask you to grant access to the camera and microphone.</p>
         <button 
             onClick={startMedia}
             className="px-6 py-3 border border-transparent rounded-md text-base font-medium text-white bg-teal-600 hover:bg-teal-700"
         >
-            Enable Camera & Microphone
+            Grant Access
         </button>
          {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
     </div>
@@ -465,15 +464,15 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
                  {!permissionsGranted && renderPermissionsRequest()}
                  {permissionsGranted && error && (
                     <div className="absolute inset-0 bg-stone-800 flex flex-col items-center justify-center text-white p-8 text-center z-10">
-                        <p className="text-lg font-semibold mb-2 text-teal-400">Recording Unavailable</p>
-                        <p>{error}</p>
+                        <p className="text-lg font-semibold mb-2 text-red-400">An Error Occurred</p>
+                        <p className="text-sm">{error}</p>
                     </div>
                  )}
                  <video ref={videoRef} autoPlay muted playsInline className="absolute w-full h-full object-cover opacity-0 pointer-events-none"></video>
                  <canvas ref={canvasRef} className={`w-full h-full object-cover transition-opacity duration-300 ${recordedBlob || !permissionsGranted ? 'opacity-0' : 'opacity-100'}`}></canvas>
                  <div className={`absolute inset-0 pointer-events-none overlay-${selectedOverlay}`}></div>
                  {recordedBlob && <video key={videoSrc} src={videoSrc} controls autoPlay playsInline className="w-full h-full object-cover"></video>}
-                 {isRecording && <div className="absolute top-4 right-4 text-white bg-teal-600 rounded-full px-3 py-1 text-sm font-bold animate-pulse">REC</div>}
+                 {isRecording && <div className="absolute top-4 right-4 text-white bg-red-600 rounded-full px-3 py-1 text-sm font-bold animate-pulse">REC</div>}
                  {isRecording && <div className="absolute bottom-4 left-4 text-white bg-black/50 rounded-md px-2 py-1 text-sm">0:{String(countdown).padStart(2, '0')}</div>}
                  
                  {isRecording && script && script.trim() !== '' && (
@@ -551,6 +550,9 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
              <div>
                 <h4 className="text-sm font-medium text-stone-700 mb-2">AI Script & Teleprompter</h4>
                 <div className="space-y-3 p-3 bg-stone-50 rounded-md border">
+                    <p className="text-xs text-stone-600 -mt-1 mb-2">
+                        Generate or paste a script below. It will become a scrolling teleprompter over your video during recording.
+                    </p>
                      <div className="flex items-center justify-between">
                         <label htmlFor="subtitles-toggle" className="text-xs font-medium text-stone-600 flex-1">
                             Generate Subtitles
@@ -596,8 +598,7 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
                         <div className='self-end'>
                              <button 
                                 onClick={handleGenerateScript}
-                                // FIX: Coerce `error` to a boolean for the disabled prop to prevent type mismatch.
-                                disabled={isGeneratingScript || !!error || !permissionsGranted}
+                                disabled={isGeneratingScript || isRecording}
                                 className="w-full h-full flex items-center justify-center px-4 py-2 border border-stone-300 text-sm font-medium rounded-md shadow-sm text-stone-700 bg-white hover:bg-stone-50 disabled:bg-stone-200 disabled:cursor-not-allowed"
                             >
                                 {isGeneratingScript ? (
@@ -624,7 +625,7 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
           </div>
           <div className="flex space-x-4">
             {isRecording ? (
-                <button onClick={handleStopRecording} className="px-6 py-2 border rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700">Stop</button>
+                <button onClick={handleStopRecording} className="px-6 py-2 border rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700">Stop</button>
             ) : recordedBlob ? (
                 <>
                     <button onClick={handleRetake} className="px-4 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-100">Retake</button>
@@ -636,7 +637,7 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
                     <button 
                         onClick={handleStartRecording} 
                         disabled={!stream || !!error || !permissionsGranted}
-                        className="px-6 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 disabled:bg-teal-300 disabled:cursor-not-allowed"
+                        className="px-6 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed"
                     >Record</button>
                 </>
             )}

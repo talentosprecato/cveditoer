@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { SparklesIcon, UploadIcon, LanguageIcon, VideoPlusIcon, BriefcaseIcon, MailIcon, SignatureIcon, TypographyIcon, CoffeeIcon } from './icons.tsx';
 
@@ -17,6 +15,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
     { icon: <SparklesIcon className="w-6 h-6 text-teal-600" />, title: 'AI-Powered CV Generation', description: 'Transform your raw data into a polished, professional CV using a variety of industry-tested templates.' },
     { icon: <UploadIcon className="w-6 h-6 text-teal-600" />, title: 'Enhance with AI', description: 'Have an existing CV? Upload a PDF or TXT file and let Gemini parse, reformat, and improve it for you.' },
     { icon: <LanguageIcon className="w-6 h-6 text-teal-600" />, title: 'Multi-Language Support', description: 'Instantly translate your CV. Select a language from the dropdown to convert your entire curriculum, making it easy to apply for jobs anywhere in the world.' },
+    { icon: <VideoPlusIcon className="w-6 h-6 text-teal-600" />, title: 'Video Profile', description: 'Record a 60-second video introduction with an AI-powered script generator, teleprompter, and visual effects to make your application stand out.' },
     { icon: <BriefcaseIcon className="w-6 h-6 text-teal-600" />, title: 'Job Opportunity Finder', description: 'Discover relevant job openings based on your CV profile and search for roles in your target cities.' },
     { icon: <MailIcon className="w-6 h-6 text-teal-600" />, title: 'Cover Letter Composer', description: 'Instantly generate a tailored cover letter for any job application, based on your CV and the company details.' },
     { icon: <SignatureIcon className="w-6 h-6 text-teal-600" />, title: 'Digital Signature', description: 'Add a personal and professional touch by drawing your own handwritten signature directly onto your CV.' },
@@ -28,7 +27,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
       <div className="bg-stone-50/80 backdrop-blur-lg rounded-xl shadow-2xl shadow-green-300/30 w-full max-w-2xl max-h-[90vh] flex flex-col transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale overflow-hidden border border-white/50">
         <header className="p-4 border-b border-green-100/80 flex justify-between items-center bg-white/60 backdrop-blur-sm flex-shrink-0">
           <div>
-            <h2 className="text-xl font-bold font-['Poppins'] text-stone-800">About Veravox AI CV Editor</h2>
+            <h2 className="text-xl font-bold font-['Poppins'] text-stone-800">About Veravox</h2>
             <p className="text-sm text-stone-600">Craft your professional story with the power of Gemini.</p>
           </div>
           <button onClick={onClose} className="text-stone-400 hover:text-stone-600 p-1 rounded-full text-2xl leading-none">&times;</button>

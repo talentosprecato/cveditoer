@@ -18,6 +18,7 @@ export interface PersonalDetails {
   github: string;
   twitter: string;
   photo: string;
+  videoProfileUrl: string;
   socialLinks: SocialLink[];
 }
 
@@ -78,7 +79,7 @@ export interface CVData {
 }
 
 // FIX: Removed 'info' from SectionId as it is not a valid draggable CV section and was causing a type error.
-export type SectionId = 'personal' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'portfolio' | 'professionalNarrative' | 'jobSearch' | 'coverLetter' | 'signature';
+export type SectionId = 'personal' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'portfolio' | 'professionalNarrative' | 'jobSearch' | 'coverLetter' | 'signature' | 'videoProfile';
 
 export type CVDataFromAI = Omit<CVData, 'experience' | 'education' | 'projects' | 'certifications' | 'portfolio'> & {
     experience: Omit<Experience, 'id'>[];

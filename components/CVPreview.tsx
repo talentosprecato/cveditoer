@@ -22,10 +22,14 @@ interface CVPreviewProps {
   selectedTemplate: string;
   onTemplateChange: (id: string) => void;
   onGenerate: () => void;
-  photoAlignment: 'left' | 'right' | 'none';
-  onPhotoAlignmentChange: (alignment: 'left' | 'right' | 'none') => void;
+  photoAlignment: 'left' | 'right' | 'center' | 'none';
+  onPhotoAlignmentChange: (alignment: 'left' | 'right' | 'center' | 'none') => void;
   photoSize: 'small' | 'medium' | 'large';
   onPhotoSizeChange: (size: 'small' | 'medium' | 'large') => void;
+  videoAlignment: 'left' | 'right' | 'center' | 'none';
+  onVideoAlignmentChange: (alignment: 'left' | 'right' | 'center' | 'none') => void;
+  videoSize: 'small' | 'medium' | 'large';
+  onVideoSizeChange: (size: 'small' | 'medium' | 'large') => void;
   portfolio: PortfolioItem[];
   fontPair: string;
   onFontPairChange: (id: string) => void;
@@ -258,6 +262,28 @@ const CVPreviewStyles = () => (
             border-style: solid;
         }
 
+        /* Alignment helpers */
+        .cv-preview-content .align-left { text-align: left; }
+        .cv-preview-content .align-center { text-align: center; }
+        .cv-preview-content .align-right { text-align: right; }
+        .cv-preview-content .align-left img, .cv-preview-content .align-left video { margin-right: auto; margin-left: 0; display: block; }
+        .cv-preview-content .align-center img, .cv-preview-content .align-center video { margin-left: auto; margin-right: auto; display: block; }
+        .cv-preview-content .align-right img, .cv-preview-content .align-right video { margin-left: auto; margin-right: 0; display: block; }
+
+        /* Video specific styles */
+        .cv-preview-content video {
+            display: block;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            margin-top: 1em;
+            margin-bottom: 1em;
+            background-color: #000;
+        }
+        .video-size-small video { max-width: 200px; }
+        .video-size-medium video { max-width: 300px; }
+        .video-size-large video { max-width: 400px; }
+
+
         /* Photo & Table Styles */
         .cv-preview-content table {
             border-spacing: 0;
@@ -285,9 +311,10 @@ const CVPreviewStyles = () => (
             margin: auto;
         }
 
-        .photo-size-small .cv-preview-content > table:first-of-type img { max-width: 80px; max-height: 80px; }
-        .photo-size-medium .cv-preview-content > table:first-of-type img { max-width: 120px; max-height: 120px; }
-        .photo-size-large .cv-preview-content > table:first-of-type img { max-width: 160px; max-height: 160px; }
+        .photo-size-small .cv-preview-content > table:first-of-type img, .photo-size-small img { max-width: 80px; max-height: 80px; border-radius: 50%; }
+        .photo-size-medium .cv-preview-content > table:first-of-type img, .photo-size-medium img { max-width: 120px; max-height: 120px; border-radius: 50%; }
+        .photo-size-large .cv-preview-content > table:first-of-type img, .photo-size-large img { max-width: 160px; max-height: 160px; border-radius: 50%; }
+
 
         .template-two-column-professional .cv-preview-content > table,
         .template-two-column-creative .cv-preview-content > table {
@@ -433,7 +460,7 @@ const Placeholder = () => (
             <svg className="mx-auto h-12 w-12 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-stone-900 font-['Poppins']">Veravox AI CV Editor</h3>
+            <h3 className="mt-2 text-sm font-medium text-stone-900 font-['Poppins']">Veravox</h3>
             <p className="mt-1 text-sm text-stone-500">Fill out the form and click "Generate" to see your professional CV here.</p>
         </div>
     </div>
@@ -450,6 +477,10 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
     onPhotoAlignmentChange,
     photoSize,
     onPhotoSizeChange,
+    videoAlignment,
+    onVideoAlignmentChange,
+    videoSize,
+    onVideoSizeChange,
     portfolio,
     fontPair,
     onFontPairChange,
@@ -511,12 +542,24 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
         setIsExporting(false);
     };
 
-    const photoAlignmentOptions: Option<'left' | 'right' | 'none'>[] = [
+    const photoAlignmentOptions: Option<'left' | 'right' | 'center' | 'none'>[] = [
         { id: 'left', label: 'Left' },
+        { id: 'center', label: 'Center' },
         { id: 'right', label: 'Right' },
         { id: 'none', label: 'Hide' },
     ];
      const photoSizeOptions: Option<'small' | 'medium' | 'large'>[] = [
+        { id: 'small', label: 'S' },
+        { id: 'medium', label: 'M' },
+        { id: 'large', label: 'L' },
+    ];
+     const videoAlignmentOptions: Option<'left' | 'right' | 'center' | 'none'>[] = [
+        { id: 'left', label: 'Left' },
+        { id: 'center', label: 'Center' },
+        { id: 'right', label: 'Right' },
+        { id: 'none', label: 'Hide' },
+    ];
+     const videoSizeOptions: Option<'small' | 'medium' | 'large'>[] = [
         { id: 'small', label: 'S' },
         { id: 'medium', label: 'M' },
         { id: 'large', label: 'L' },
@@ -541,6 +584,20 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
                         onChange={onPhotoSizeChange}
                     />
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     <OptionSelector
+                        label="Video Alignment"
+                        options={videoAlignmentOptions}
+                        selectedOption={videoAlignment}
+                        onChange={onVideoAlignmentChange}
+                    />
+                     <OptionSelector
+                        label="Video Size"
+                        options={videoSizeOptions}
+                        selectedOption={videoSize}
+                        onChange={onVideoSizeChange}
+                    />
+                </div>
                  <FontSelector selectedFontPair={fontPair} onChange={onFontPairChange} />
                 <div className="pt-4 border-t border-green-100/80">
                     <button
@@ -557,7 +614,7 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
             <div className="flex-grow bg-white rounded-b-xl shadow-lg shadow-green-200/30 overflow-y-auto p-2 border border-t-0 border-white/30 relative">
                 <div 
                     ref={previewRef} 
-                    className={`cv-preview-content p-8 template-${selectedTemplate} font-pair-${fontPair} photo-size-${photoSize}`}
+                    className={`cv-preview-content p-8 template-${selectedTemplate} font-pair-${fontPair} photo-size-${photoSize} video-size-${videoSize}`}
                 >
                     {isLoading && !markdownContent && <LoadingSkeleton />}
                     {!isLoading && error && (

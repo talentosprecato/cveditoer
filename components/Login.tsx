@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { signInWithGoogle } from '../services/authService.ts';
 import { GoogleIcon, SparklesIcon } from './icons.tsx';
@@ -36,7 +34,7 @@ const Login: React.FC = () => {
             <div className="max-w-md w-full bg-white shadow-xl rounded-2xl p-8 space-y-8 transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale">
                 <div className="text-center">
                     <SparklesIcon className="w-12 h-12 text-teal-600 mx-auto" />
-                    <h1 className="text-3xl font-bold text-stone-900 mt-4 tracking-tight">Veravox AI CV Editor</h1>
+                    <h1 className="text-3xl font-bold text-stone-900 mt-4 tracking-tight">Veravox</h1>
                     <p className="mt-2 text-stone-600">Sign in to continue to your workspace</p>
                 </div>
 

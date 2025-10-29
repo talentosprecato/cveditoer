@@ -14,6 +14,7 @@ const initialCVData: CVData = {
     github: 'github.com/janedoe',
     twitter: 'twitter.com/janedoe',
     photo: '',
+    videoProfileUrl: '',
     socialLinks: [
         { id: crypto.randomUUID(), platform: 'Facebook', url: 'facebook.com/janedoe' },
         { id: crypto.randomUUID(), platform: 'Instagram', url: 'instagram.com/janedoe' },
@@ -118,7 +119,7 @@ export const useCVData = () => {
     updateCvData(newData);
   };
 
-  const updatePersonal = (field: keyof Omit<PersonalDetails, 'photo' | 'socialLinks'>, value: string) => {
+  const updatePersonal = (field: keyof Omit<PersonalDetails, 'photo' | 'socialLinks' | 'videoProfileUrl'>, value: string) => {
     updateCvData(prev => ({ ...prev, personal: { ...prev.personal, [field]: value } }));
   };
 
@@ -126,6 +127,10 @@ export const useCVData = () => {
     updateCvData(prev => ({ ...prev, personal: { ...prev.personal, photo: base64 } }));
   };
   
+  const updateVideoProfile = (url: string) => {
+    updateCvData(prev => ({ ...prev, personal: { ...prev.personal, videoProfileUrl: url } }));
+  };
+
   const addSocialLink = () => {
     updateCvData(prev => ({
         ...prev,
@@ -375,6 +380,7 @@ export const useCVData = () => {
     loadCVData,
     updatePersonal,
     updatePhoto,
+    updateVideoProfile,
     addSocialLink,
     updateSocialLink,
     removeSocialLink,

@@ -1,13 +1,13 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { CVData, PersonalDetails, Experience, Education, SectionId, Project, Certification, PortfolioItem, SocialLink } from '../types.ts';
-// FIX: Import the missing CameraIcon component.
-import { PlusIcon, TrashIcon, SparklesIcon, DragHandleIcon, UploadIcon, FileIcon, XCircleIcon, BriefcaseIcon, CheckCircleIcon, SearchIcon, MailIcon, LinkIcon, FacebookIcon, InstagramIcon, TwitterIcon, GithubIcon, UserIcon, AcademicCapIcon, CodeBracketIcon, FolderIcon, TrophyIcon, PhotoIcon, ChatBubbleLeftRightIcon, SignatureIcon, ChevronDownIcon, CameraIcon } from './icons.tsx';
+import { PlusIcon, TrashIcon, SparklesIcon, DragHandleIcon, UploadIcon, FileIcon, XCircleIcon, BriefcaseIcon, CheckCircleIcon, SearchIcon, MailIcon, LinkIcon, FacebookIcon, InstagramIcon, TwitterIcon, GithubIcon, UserIcon, AcademicCapIcon, CodeBracketIcon, FolderIcon, TrophyIcon, PhotoIcon, ChatBubbleLeftRightIcon, SignatureIcon, ChevronDownIcon, CameraIcon, VideoPlusIcon } from './icons.tsx';
 import { SignaturePad } from './SignaturePad.tsx';
 
 interface CVFormProps {
   cvData: CVData;
-  onPersonalChange: (field: keyof Omit<PersonalDetails, 'photo' | 'socialLinks'>, value: string) => void;
+  onPersonalChange: (field: keyof Omit<PersonalDetails, 'photo' | 'socialLinks' | 'videoProfileUrl'>, value: string) => void;
   onPhotoChange: (base64: string) => void;
+  onUpdateVideoProfile: (url: string) => void;
   onAddSocialLink: () => void;
   onUpdateSocialLink: (id: string, field: keyof Omit<SocialLink, 'id'>, value: string) => void;
   onRemoveSocialLink: (id: string) => void;
@@ -42,6 +42,7 @@ interface CVFormProps {
   language: string;
   onOpenJobModal: () => void;
   onOpenCoverLetterModal: () => void;
+  onOpenVideoModal: () => void;
 }
 
 const Section: React.FC<{ title: string; children: React.ReactNode; icon: React.ReactNode; isOpen: boolean; onToggle: () => void; dragHandle: React.ReactNode; }> = ({ title, children, icon, isOpen, onToggle, dragHandle }) => (
@@ -101,6 +102,7 @@ export const CVForm: React.FC<CVFormProps> = ({
   cvData,
   onPersonalChange,
   onPhotoChange,
+  onUpdateVideoProfile,
   onAddSocialLink,
   onUpdateSocialLink,
   onRemoveSocialLink,
@@ -135,6 +137,7 @@ export const CVForm: React.FC<CVFormProps> = ({
   language,
   onOpenJobModal,
   onOpenCoverLetterModal,
+  onOpenVideoModal,
 }) => {
   const sectionDragItem = useRef<number | null>(null);
   const sectionDragOverItem = useRef<number | null>(null);
@@ -165,6 +168,18 @@ export const CVForm: React.FC<CVFormProps> = ({
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const [videoUrlInput, setVideoUrlInput] = useState('');
+
+  useEffect(() => {
+    // Sync local input state if global state changes from recording/upload
+    if (cvData.personal.videoProfileUrl && !cvData.personal.videoProfileUrl.startsWith('data:')) {
+      setVideoUrlInput(cvData.personal.videoProfileUrl);
+    } else {
+      setVideoUrlInput('');
+    }
+  }, [cvData.personal.videoProfileUrl]);
+
 
   const handleSectionToggle = (sectionId: SectionId) => {
     setActiveSection(prev => prev === sectionId ? null : sectionId);
@@ -283,6 +298,7 @@ export const CVForm: React.FC<CVFormProps> = ({
       jobSearch: 'Job Opportunity Finder',
       coverLetter: 'Cover Letter Composer',
       signature: 'Signature',
+      videoProfile: 'Video Profile',
     };
 
     if (sectionTitles[sectionId].toLowerCase().includes(lowerCaseQuery)) {
@@ -319,6 +335,8 @@ export const CVForm: React.FC<CVFormProps> = ({
         return 'cover letter composer draft email'.includes(lowerCaseQuery);
       case 'signature':
         return 'signature sign draw handwritten'.includes(lowerCaseQuery);
+      case 'videoProfile':
+        return 'video profile record presentation'.includes(lowerCaseQuery);
       default:
         return false;
     }
@@ -349,6 +367,7 @@ export const CVForm: React.FC<CVFormProps> = ({
     signature: <SignatureIcon {...sectionIconProps} />,
     coverLetter: <MailIcon {...sectionIconProps} />,
     jobSearch: <BriefcaseIcon {...sectionIconProps} />,
+    videoProfile: <VideoPlusIcon {...sectionIconProps} />,
   };
   
   const sectionTitles: Record<SectionId, string> = {
@@ -363,6 +382,7 @@ export const CVForm: React.FC<CVFormProps> = ({
       jobSearch: 'Job Opportunity Finder',
       coverLetter: 'Cover Letter Composer',
       signature: 'Signature',
+      videoProfile: 'Video Profile',
   };
 
 
@@ -734,6 +754,58 @@ export const CVForm: React.FC<CVFormProps> = ({
             </button>
           </div>
         )}
+      </>
+    ),
+    videoProfile: (
+      <>
+        <p className="text-sm text-stone-600 mb-4">Make your CV stand out by adding a video introduction. You can record a new one, or paste a link from a service like YouTube or Vimeo.</p>
+        
+        {cvData.personal.videoProfileUrl && (
+          <div className="space-y-4 mb-6">
+            <video src={cvData.personal.videoProfileUrl} controls className="w-full rounded-md shadow-inner border"></video>
+            <button
+              onClick={() => onUpdateVideoProfile('')}
+              className="flex items-center justify-center w-full px-4 py-2 border border-stone-300 text-sm font-medium rounded-md text-stone-700 hover:bg-stone-50"
+            >
+              <TrashIcon className="w-5 h-5 mr-2" />
+              Remove Video
+            </button>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div className="flex items-end space-x-2">
+            <div className="flex-grow">
+               <Input 
+                 label="Paste video URL"
+                 type="url"
+                 placeholder="https://example.com/video"
+                 value={videoUrlInput}
+                 onChange={(e) => setVideoUrlInput(e.target.value)}
+               />
+            </div>
+             <button
+                onClick={() => onUpdateVideoProfile(videoUrlInput)}
+                className="px-4 py-2 border border-stone-300 text-sm font-medium rounded-md text-stone-700 bg-white hover:bg-stone-50"
+              >
+                Save Link
+            </button>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <hr className="flex-grow border-stone-200" />
+            <span className="text-xs text-stone-500">OR</span>
+            <hr className="flex-grow border-stone-200" />
+          </div>
+
+          <button
+            onClick={onOpenVideoModal}
+            className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300"
+          >
+            <VideoPlusIcon className="w-5 h-5 mr-2" />
+            Record New Video
+          </button>
+        </div>
       </>
     ),
     coverLetter: (
