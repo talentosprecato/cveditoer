@@ -57,7 +57,7 @@ const App: React.FC = () => {
   const [videoAlignment, setVideoAlignment] = useState<'left' | 'right' | 'center' | 'none'>('center');
   const [videoSize, setVideoSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [fontPair, setFontPair] = useState<string>('inter-lora');
-  const [sections, setSections] = useState<SectionId[]>(['personal', 'experience', 'education', 'skills', 'projects', 'portfolio', 'certifications', 'professionalNarrative', 'signature', 'videoProfile', 'coverLetter', 'jobSearch']);
+  const [sections, setSections] = useState<SectionId[]>(['personal', 'experience', 'education', 'skills', 'projects', 'portfolio', 'certifications', 'professionalNarrative', 'signature', 'coverLetter', 'jobSearch']);
   const [language, setLanguage] = useState('en');
   
   const [isEnhancing, setIsEnhancing] = useState(false);
@@ -74,7 +74,7 @@ const App: React.FC = () => {
     setError(null);
     setGeneratedMd('');
     try {
-      const sectionsForAI = sections.filter(s => s !== 'portfolio' && s !== 'jobSearch' && s !== 'signature' && s !== 'coverLetter' && s !== 'videoProfile');
+      const sectionsForAI = sections.filter(s => s !== 'portfolio' && s !== 'jobSearch' && s !== 'signature' && s !== 'coverLetter');
       const stream = await generateCV(cvData as CVData, selectedTemplate, sectionsForAI, language, photoAlignment, videoAlignment, videoSize);
       let fullCv = '';
       for await (const chunk of stream) {

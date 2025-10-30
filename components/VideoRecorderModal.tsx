@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { CVData } from '../types.ts';
-import { generateVideoScript, startLiveTranscriptionSession } from '../services/geminiService.ts';
+import { generateVideoScript } from '../services/geminiService.ts';
 import { MagicWandIcon, CameraIcon } from './icons.tsx';
-import type { LiveServerMessage, Blob as GenAI_Blob } from '@google/genai';
 
 interface VideoRecorderModalProps {
   isOpen: boolean;
@@ -11,61 +10,6 @@ interface VideoRecorderModalProps {
   cvData: CVData;
   language: string;
 }
-
-// Helper for Base64 encoding audio data
-function encode(bytes: Uint8Array) {
-  let binary = '';
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-// This code runs in a separate thread to process audio without blocking the UI.
-const audioWorkletProcessorCode = `
-class AudioSenderProcessor extends AudioWorkletProcessor {
-  constructor(options) {
-    super();
-    this.bufferSize = options?.processorOptions?.bufferSize || 4096;
-    this.buffer = new Int16Array(this.bufferSize);
-    this.bufferIndex = 0;
-  }
-
-  static float32ToInt16(buffer) {
-    let l = buffer.length;
-    let buf = new Int16Array(l);
-    for (let i = 0; i < l; i++) {
-      buf[i] = Math.max(-1, Math.min(1, buffer[i])) * 0x7FFF;
-    }
-    return buf;
-  }
-
-  process(inputs) {
-    const input = inputs[0];
-    if (!input || input.length === 0 || !input[0] || input[0].length === 0) {
-        return true;
-    }
-    
-    const inputData = input[0];
-    if (inputData) {
-      const int16Data = AudioSenderProcessor.float32ToInt16(inputData);
-      
-      for (let i = 0; i < int16Data.length; i++) {
-        this.buffer[this.bufferIndex++] = int16Data[i];
-        if (this.bufferIndex === this.bufferSize) {
-          this.port.postMessage(this.buffer.buffer);
-          this.bufferIndex = 0;
-        }
-      }
-    }
-    return true;
-  }
-}
-
-registerProcessor('audio-sender-processor', AudioSenderProcessor);
-`;
-
 
 const filterGroups = {
   'Standard': [
@@ -105,8 +49,6 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
   const [error, setError] = useState<string | null>(null);
   const [scrollSpeed, setScrollSpeed] = useState(1);
   const [activeTab, setActiveTab] = useState<'filters' | 'overlays'>('filters');
-  const [isSubtitlesEnabled, setIsSubtitlesEnabled] = useState(true);
-  const [subtitles, setSubtitles] = useState('');
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -119,23 +61,10 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
   const scrollAnimationRef = useRef<number | null>(null);
   
   const selectedFilterRef = useRef(selectedFilter);
-  const subtitlesRef = useRef(subtitles);
-  const sessionPromiseRef = useRef<Promise<{
-    sendRealtimeInput: (input: { media: GenAI_Blob; }) => void;
-    close: () => void;
-  }> | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const audioWorkletNodeRef = useRef<AudioWorkletNode | null>(null);
-  const subtitleTimeoutRef = useRef<number | null>(null);
-
 
   useEffect(() => {
     selectedFilterRef.current = selectedFilter;
   }, [selectedFilter]);
-  
-  useEffect(() => {
-    subtitlesRef.current = subtitles;
-  }, [subtitles]);
 
   const drawVideoOnCanvas = useCallback(() => {
     if (videoRef.current && canvasRef.current && videoRef.current.readyState >= 3) {
@@ -147,32 +76,6 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
         canvas.height = video.videoHeight;
         ctx.filter = selectedFilterRef.current;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // Draw subtitles
-        const currentSubtitles = subtitlesRef.current;
-        if (currentSubtitles) {
-            const fontSize = Math.max(16, Math.round(canvas.height / 28));
-            ctx.font = `bold ${fontSize}px "Inter", sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-            const text = currentSubtitles;
-            const padding = fontSize / 2;
-            const textMetrics = ctx.measureText(text);
-            const x = canvas.width / 2;
-            const y = canvas.height - (fontSize / 1.5);
-
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-            const textWidth = textMetrics.actualBoundingBoxRight + textMetrics.actualBoundingBoxLeft;
-            ctx.fillRect(
-                x - textWidth / 2 - padding,
-                y - fontSize - padding,
-                textWidth + padding * 2,
-                fontSize + padding * 2
-            );
-
-            ctx.fillStyle = 'white';
-            ctx.fillText(text, x, y);
-        }
       }
     }
     animationFrameIdRef.current = requestAnimationFrame(drawVideoOnCanvas);
@@ -187,28 +90,6 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
       teleprompterRef.current.scrollTop = 0; // Reset scroll
     }
   }, []);
-
-  const handleLiveMessage = (message: LiveServerMessage) => {
-    if (subtitleTimeoutRef.current) {
-        clearTimeout(subtitleTimeoutRef.current);
-    }
-    if (message.serverContent?.turnComplete) {
-        setSubtitles('');
-        return;
-    }
-    if (message.serverContent?.inputTranscription) {
-        const text = message.serverContent.inputTranscription.text;
-        setSubtitles(text);
-        subtitleTimeoutRef.current = window.setTimeout(() => {
-            setSubtitles('');
-        }, 3000);
-    }
-  };
-
-  const handleLiveError = (e: Event) => {
-     console.error('Live transcription error:', e);
-     setError("Live transcription failed. Subtitles will not be available.");
-  };
 
   const startMedia = useCallback(async () => {
     setError(null);
@@ -226,42 +107,6 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
             animationFrameIdRef.current = requestAnimationFrame(drawVideoOnCanvas);
         };
       }
-
-      if (isSubtitlesEnabled) {
-          sessionPromiseRef.current = startLiveTranscriptionSession(handleLiveMessage, handleLiveError, language);
-          sessionPromiseRef.current.catch(err => {
-              console.error("Failed to connect to live session:", err);
-              setError("Failed to start live subtitles. Please try again.");
-          });
-          
-          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-          const source = audioContextRef.current.createMediaStreamSource(mediaStream);
-          
-          const blob = new Blob([audioWorkletProcessorCode], { type: 'application/javascript' });
-          const workletURL = URL.createObjectURL(blob);
-          
-          await audioContextRef.current.audioWorklet.addModule(workletURL);
-          
-          const workletNode = new AudioWorkletNode(audioContextRef.current, 'audio-sender-processor', {
-              processorOptions: { bufferSize: 4096 }
-          });
-          audioWorkletNodeRef.current = workletNode;
-          
-          workletNode.port.onmessage = (event) => {
-              const pcmBlob: GenAI_Blob = {
-                  data: encode(new Uint8Array(event.data)),
-                  mimeType: 'audio/pcm;rate=16000',
-              };
-              
-              if (sessionPromiseRef.current) {
-                  sessionPromiseRef.current.then((session) => {
-                      session.sendRealtimeInput({ media: pcmBlob });
-                  });
-              }
-          };
-
-          source.connect(workletNode);
-      }
     } catch (err) {
       console.error("Error accessing camera and microphone:", err);
       let message = "Could not access camera and microphone. Please ensure you have given permissions for both devices.";
@@ -275,30 +120,13 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
       setError(message);
       setPermissionsGranted(false);
     }
-  }, [isSubtitlesEnabled, language, drawVideoOnCanvas]);
+  }, [drawVideoOnCanvas]);
 
   const stopMedia = useCallback(() => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
     }
-    if (sessionPromiseRef.current) {
-        sessionPromiseRef.current.then(session => session.close());
-        sessionPromiseRef.current = null;
-    }
-    if (audioWorkletNodeRef.current) {
-        audioWorkletNodeRef.current.disconnect();
-        audioWorkletNodeRef.current.port.onmessage = null;
-        audioWorkletNodeRef.current = null;
-    }
-    if (audioContextRef.current) {
-        audioContextRef.current.close();
-        audioContextRef.current = null;
-    }
-    if (subtitleTimeoutRef.current) {
-        clearTimeout(subtitleTimeoutRef.current);
-    }
-    setSubtitles('');
     if (animationFrameIdRef.current) {
       cancelAnimationFrame(animationFrameIdRef.current);
       animationFrameIdRef.current = null;
@@ -476,8 +304,8 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
                  {isRecording && <div className="absolute bottom-4 left-4 text-white bg-black/50 rounded-md px-2 py-1 text-sm">0:{String(countdown).padStart(2, '0')}</div>}
                  
                  {isRecording && script && script.trim() !== '' && (
-                    <div className="absolute inset-0 bg-black/60 p-8 flex items-center justify-center overflow-hidden pointer-events-none">
-                        <div ref={teleprompterRef} className="w-full max-w-lg h-full overflow-y-scroll scrollbar-hide">
+                    <div className="absolute inset-0 bg-black/60 p-8 overflow-hidden pointer-events-none">
+                        <div ref={teleprompterRef} className="w-full max-w-lg h-full overflow-y-scroll scrollbar-hide mx-auto">
                             <p className="text-white text-2xl leading-relaxed font-semibold whitespace-pre-wrap text-center">
                                 {script}
                             </p>
@@ -553,21 +381,6 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
                     <p className="text-xs text-stone-600 -mt-1 mb-2">
                         Generate or paste a script below. It will become a scrolling teleprompter over your video during recording.
                     </p>
-                     <div className="flex items-center justify-between">
-                        <label htmlFor="subtitles-toggle" className="text-xs font-medium text-stone-600 flex-1">
-                            Generate Subtitles
-                        </label>
-                        <button
-                            id="subtitles-toggle"
-                            role="switch"
-                            aria-checked={isSubtitlesEnabled}
-                            onClick={() => setIsSubtitlesEnabled(!isSubtitlesEnabled)}
-                            className={`${isSubtitlesEnabled ? 'bg-teal-600' : 'bg-stone-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2`}
-                            disabled={isRecording}
-                        >
-                            <span className={`${isSubtitlesEnabled ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`} />
-                        </button>
-                    </div>
                     <textarea
                         value={script || ''}
                         onChange={(e) => setScript(e.target.value)}

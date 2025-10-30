@@ -298,7 +298,6 @@ export const CVForm: React.FC<CVFormProps> = ({
       jobSearch: 'Job Opportunity Finder',
       coverLetter: 'Cover Letter Composer',
       signature: 'Signature',
-      videoProfile: 'Video Profile',
     };
 
     if (sectionTitles[sectionId].toLowerCase().includes(lowerCaseQuery)) {
@@ -335,8 +334,6 @@ export const CVForm: React.FC<CVFormProps> = ({
         return 'cover letter composer draft email'.includes(lowerCaseQuery);
       case 'signature':
         return 'signature sign draw handwritten'.includes(lowerCaseQuery);
-      case 'videoProfile':
-        return 'video profile record presentation'.includes(lowerCaseQuery);
       default:
         return false;
     }
@@ -367,7 +364,6 @@ export const CVForm: React.FC<CVFormProps> = ({
     signature: <SignatureIcon {...sectionIconProps} />,
     coverLetter: <MailIcon {...sectionIconProps} />,
     jobSearch: <BriefcaseIcon {...sectionIconProps} />,
-    videoProfile: <VideoPlusIcon {...sectionIconProps} />,
   };
   
   const sectionTitles: Record<SectionId, string> = {
@@ -382,7 +378,6 @@ export const CVForm: React.FC<CVFormProps> = ({
       jobSearch: 'Job Opportunity Finder',
       coverLetter: 'Cover Letter Composer',
       signature: 'Signature',
-      videoProfile: 'Video Profile',
   };
 
 
@@ -456,52 +451,106 @@ export const CVForm: React.FC<CVFormProps> = ({
             </button>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-green-100/80 space-y-6">
-            <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">Profile Photo</label>
-                <div className="flex items-center space-x-4">
-                    {photoToShow ? (
-                        <img src={photoToShow} alt="Profile" className={`w-16 h-16 rounded-full object-cover transition-all ${photoPreviewUrl ? 'ring-2 ring-teal-500 ring-offset-2' : ''}`} />
-                    ) : (
-                        <div className="w-16 h-16 rounded-full bg-stone-200 flex items-center justify-center text-stone-500">
-                            <CameraIcon className="w-8 h-8" />
-                        </div>
-                    )}
-                    <input type="file" accept="image/*" onChange={handlePhotoChange} ref={photoInputRef} className="hidden" />
-                    
-                    {photoPreviewUrl ? (
-                        <div className="flex items-center space-x-2">
-                             <button
-                                onClick={handleConfirmPhoto}
-                                className="px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300"
-                            >
-                                Confirm
+        <div className="mt-6 pt-6 border-t border-green-100/80 space-y-8">
+          {/* Photo Section */}
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-2">Profile Photo</label>
+            <div className="flex items-center space-x-4">
+                {photoToShow ? (
+                    <img src={photoToShow} alt="Profile" className={`w-16 h-16 rounded-full object-cover transition-all ${photoPreviewUrl ? 'ring-2 ring-teal-500 ring-offset-2' : ''}`} />
+                ) : (
+                    <div className="w-16 h-16 rounded-full bg-stone-200 flex items-center justify-center text-stone-500">
+                        <CameraIcon className="w-8 h-8" />
+                    </div>
+                )}
+                <input type="file" accept="image/*" onChange={handlePhotoChange} ref={photoInputRef} className="hidden" />
+                
+                {photoPreviewUrl ? (
+                    <div className="flex items-center space-x-2">
+                         <button
+                            onClick={handleConfirmPhoto}
+                            className="px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300"
+                        >
+                            Confirm
+                        </button>
+                        <button
+                            onClick={handleCancelPhoto}
+                            className="px-3 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-50"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                ) : (
+                    <div className="flex items-center space-x-2">
+                        <button
+                            onClick={() => photoInputRef.current?.click()}
+                            className="px-3 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-50"
+                        >
+                            {cvData.personal.photo ? 'Change Photo' : 'Upload Photo'}
+                        </button>
+                        {cvData.personal.photo && (
+                            <button onClick={handleRemovePhoto} className="flex items-center space-x-1.5 px-3 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-50 hover:text-orange-600">
+                                <TrashIcon className="w-4 h-4"/>
+                                <span>Remove</span>
                             </button>
-                            <button
-                                onClick={handleCancelPhoto}
-                                className="px-3 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-50"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="flex items-center space-x-2">
-                            <button
-                                onClick={() => photoInputRef.current?.click()}
-                                className="px-3 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-50"
-                            >
-                                {cvData.personal.photo ? 'Change Photo' : 'Upload Photo'}
-                            </button>
-                            {cvData.personal.photo && (
-                                <button onClick={handleRemovePhoto} className="flex items-center space-x-1.5 px-3 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-50 hover:text-orange-600">
-                                    <TrashIcon className="w-4 h-4"/>
-                                    <span>Remove</span>
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
+                )}
             </div>
+          </div>
+          
+          {/* Video Section */}
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-2">Video Profile</label>
+            <p className="text-xs text-stone-500 mb-3">Make your CV stand out by adding a video introduction. You can record a new one, or paste a link from a service like YouTube or Vimeo.</p>
+            
+            {cvData.personal.videoProfileUrl && (
+              <div className="space-y-2 mt-4">
+                <video key={cvData.personal.videoProfileUrl} src={cvData.personal.videoProfileUrl} controls className="w-full max-w-sm rounded-md shadow-inner border"></video>
+                <button
+                  onClick={() => onUpdateVideoProfile('')}
+                  className="flex items-center justify-center w-full max-w-sm px-4 py-2 border border-stone-300 text-sm font-medium rounded-md text-stone-700 hover:bg-stone-50"
+                >
+                  <TrashIcon className="w-5 h-5 mr-2" />
+                  Remove Video
+                </button>
+              </div>
+            )}
+
+            <div className="space-y-3 mt-4">
+              <div className="flex items-end space-x-2">
+                <div className="flex-grow">
+                   <Input 
+                     label="Paste video URL"
+                     type="url"
+                     placeholder="https://example.com/video"
+                     value={videoUrlInput}
+                     onChange={(e) => setVideoUrlInput(e.target.value)}
+                   />
+                </div>
+                 <button
+                    onClick={() => onUpdateVideoProfile(videoUrlInput)}
+                    className="px-4 py-2 border border-stone-300 text-sm font-medium rounded-md text-stone-700 bg-white hover:bg-stone-50"
+                  >
+                    Save Link
+                </button>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <hr className="flex-grow border-stone-200" />
+                <span className="text-xs text-stone-500">OR</span>
+                <hr className="flex-grow border-stone-200" />
+              </div>
+
+              <button
+                onClick={onOpenVideoModal}
+                className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300"
+              >
+                <VideoPlusIcon className="w-5 h-5 mr-2" />
+                Record New Video
+              </button>
+            </div>
+          </div>
         </div>
       </>
     ),
@@ -754,58 +803,6 @@ export const CVForm: React.FC<CVFormProps> = ({
             </button>
           </div>
         )}
-      </>
-    ),
-    videoProfile: (
-      <>
-        <p className="text-sm text-stone-600 mb-4">Make your CV stand out by adding a video introduction. You can record a new one, or paste a link from a service like YouTube or Vimeo.</p>
-        
-        {cvData.personal.videoProfileUrl && (
-          <div className="space-y-4 mb-6">
-            <video src={cvData.personal.videoProfileUrl} controls className="w-full rounded-md shadow-inner border"></video>
-            <button
-              onClick={() => onUpdateVideoProfile('')}
-              className="flex items-center justify-center w-full px-4 py-2 border border-stone-300 text-sm font-medium rounded-md text-stone-700 hover:bg-stone-50"
-            >
-              <TrashIcon className="w-5 h-5 mr-2" />
-              Remove Video
-            </button>
-          </div>
-        )}
-
-        <div className="space-y-4">
-          <div className="flex items-end space-x-2">
-            <div className="flex-grow">
-               <Input 
-                 label="Paste video URL"
-                 type="url"
-                 placeholder="https://example.com/video"
-                 value={videoUrlInput}
-                 onChange={(e) => setVideoUrlInput(e.target.value)}
-               />
-            </div>
-             <button
-                onClick={() => onUpdateVideoProfile(videoUrlInput)}
-                className="px-4 py-2 border border-stone-300 text-sm font-medium rounded-md text-stone-700 bg-white hover:bg-stone-50"
-              >
-                Save Link
-            </button>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <hr className="flex-grow border-stone-200" />
-            <span className="text-xs text-stone-500">OR</span>
-            <hr className="flex-grow border-stone-200" />
-          </div>
-
-          <button
-            onClick={onOpenVideoModal}
-            className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300"
-          >
-            <VideoPlusIcon className="w-5 h-5 mr-2" />
-            Record New Video
-          </button>
-        </div>
       </>
     ),
     coverLetter: (

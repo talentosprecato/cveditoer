@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type, Modality, LiveServerMessage } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { CVData, CVDataFromAI, SectionId, JobSuggestion } from "../types.ts";
 
 let ai: GoogleGenAI | null = null;
@@ -412,38 +412,4 @@ export const generateVideoScript = async (cvData: CVData, language: string): Pro
     });
 
     return response.text;
-};
-
-
-export const startLiveTranscriptionSession = async (
-  onMessage: (message: LiveServerMessage) => void,
-  onError: (error: Event) => void,
-  language: string
-) => {
-    const localAi = getAiInstance();
-    const languageCodeMapping: Record<string, string> = {
-        en: "en-US", it: "it-IT", fr: "fr-FR", es: "es-ES", pt: "pt-BR",
-        ru: "ru-RU", ar: "ar-SA", tr: "tr-TR", az: "az-AZ",
-        'it-ven': 'it-IT', 'it-par': 'it-IT', 'it-rom': 'it-IT', 'it-abr': 'it-IT', 'it-sal': 'it-IT', 'it-sic': 'it-IT',
-        sw: "sw-TZ", yo: "yo-NG", zu: "zu-ZA"
-    };
-
-    const session = await localAi.live.connect({
-        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
-        callbacks: {
-            onopen: () => console.log('Live session opened.'),
-            onmessage: onMessage,
-            onerror: onError,
-            onclose: () => console.log('Live session closed.'),
-        },
-        config: {
-            // responseModalities must be an array with a single 'AUDIO' element.
-            responseModalities: [Modality.AUDIO],
-            inputAudioTranscription: {
-                languageCode: languageCodeMapping[language] || 'en-US'
-            },
-        },
-    });
-
-    return session;
 };
