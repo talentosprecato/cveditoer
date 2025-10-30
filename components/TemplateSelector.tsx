@@ -21,52 +21,10 @@ const templates: Template[] = [
     longDescription: 'A professional two-column layout that separates contact details and skills into a sidebar for quick scanning, while giving ample space for detailed experience and education history.'
   },
   {
-    id: 'two-column-creative',
-    name: 'Two-Column Creative',
-    description: 'A stylish, asymmetric layout for creative roles.',
-    longDescription: 'A dynamic two-column layout perfect for creatives. A narrow sidebar holds contact info and skills, giving maximum space to showcase your experience and projects in the main column.'
-  },
-  {
-    id: 'creative',
-    name: 'Creative',
-    description: 'A stylish layout for roles in design, marketing, etc.',
-    longDescription: 'Perfect for designers, marketers, and creative professionals. This layout uses more visual flair to highlight a portfolio or key projects. Designed to be memorable and stand out.'
-  },
-  {
     id: 'classic',
     name: 'Classic',
     description: 'A traditional, formal layout for conservative fields.',
     longDescription: 'Best suited for traditional industries like law, finance, or academia. Follows a formal structure with a clear chronological order, prioritizing professionalism over visual embellishments.'
-  },
-  {
-    id: 'eu-cv',
-    name: 'EU CV',
-    description: 'A standard, minimal European format.',
-    longDescription: 'Follows the standard European CV format. A clean, structured, and comprehensive layout ideal for applications within the EU. Focuses on clarity and detailed information.'
-  },
-  {
-    id: 'ai-content-editor',
-    name: 'AI Content Editor',
-    description: 'Highlights AI skills and content creation experience.',
-    longDescription: 'Tailored for roles in AI content, prompt engineering, and digital strategy. This template emphasizes technical skills alongside creative content portfolios, showcasing a blend of analytical and artistic abilities.'
-  },
-  {
-    id: 'social-media-creative',
-    name: 'Social Media Creative',
-    description: 'Visually engaging, perfect for social media roles.',
-    longDescription: 'A vibrant, visually-driven template for social media managers, content creators, and digital marketers. It\'s designed to highlight engagement metrics, successful campaigns, and platform-specific expertise in a modern, stylish format.'
-  },
-  {
-    id: 'technical',
-    name: 'Technical',
-    description: 'Data-dense, for engineering and IT roles.',
-    longDescription: 'A clean, information-rich template for technical roles like software engineering. Prioritizes skills, projects, and tools in a highly scannable format.'
-  },
-  {
-    id: 'minimalist',
-    name: 'Minimalist',
-    description: 'Elegant and simple, focusing on typography.',
-    longDescription: 'A sophisticated, minimalist design that uses typography and white space to create a polished look. Perfect for roles where clarity and elegance are key.'
   }
 ];
 
