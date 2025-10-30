@@ -304,11 +304,13 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
                  {isRecording && <div className="absolute bottom-4 left-4 text-white bg-black/50 rounded-md px-2 py-1 text-sm">0:{String(countdown).padStart(2, '0')}</div>}
                  
                  {isRecording && script && script.trim() !== '' && (
-                    <div className="absolute inset-0 bg-black/60 p-8 overflow-hidden pointer-events-none">
-                        <div ref={teleprompterRef} className="w-full max-w-lg h-full overflow-y-scroll scrollbar-hide mx-auto">
+                    <div className="absolute inset-0 bg-black/60 p-8 flex justify-center overflow-hidden pointer-events-none">
+                        <div ref={teleprompterRef} className="w-full max-w-lg h-full overflow-y-scroll scrollbar-hide">
+                            <div className="h-1/2"></div>
                             <p className="text-white text-2xl leading-relaxed font-semibold whitespace-pre-wrap text-center">
                                 {script}
                             </p>
+                            <div className="h-1/2"></div>
                         </div>
                     </div>
                 )}
@@ -447,11 +449,13 @@ export const VideoRecorderModal: React.FC<VideoRecorderModalProps> = ({ isOpen, 
             ) : (
                 <>
                     <button onClick={onClose} className="px-4 py-2 border border-stone-300 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-100">Cancel</button>
-                    <button 
-                        onClick={handleStartRecording} 
-                        disabled={!stream || !!error || !permissionsGranted}
-                        className="px-6 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed"
-                    >Record</button>
+                    {permissionsGranted && (
+                        <button 
+                            onClick={handleStartRecording} 
+                            disabled={!stream || !!error}
+                            className="px-6 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 disabled:bg-teal-300 disabled:cursor-not-allowed"
+                        >Record</button>
+                    )}
                 </>
             )}
           </div>

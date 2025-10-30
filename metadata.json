@@ -1,5 +1,8 @@
 {
   "name": "Veravox Easy Cv Editor",
   "description": "An intelligent CV editor that helps you craft the perfect resume. Input your details, and let Gemini API generate a professional, well-written CV for you. Preview, edit, and perfect your resume with ease.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
 }
