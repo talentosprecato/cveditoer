@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { CVData, CVDataFromAI, SectionId, JobSuggestion } from "../types.ts";
 
@@ -125,6 +126,18 @@ const cvSchema = {
                 website: { type: Type.STRING },
                 github: { type: Type.STRING },
                 twitter: { type: Type.STRING },
+                socialLinks: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            platform: { type: Type.STRING },
+                            url: { type: Type.STRING }
+                        },
+                        required: ['platform', 'url']
+                    },
+                    description: 'Other social media links not covered by dedicated fields.'
+                }
             },
             required: ['fullName', 'email', 'phone', 'residence']
         },
@@ -187,12 +200,25 @@ const cvSchema = {
                 required: ['name', 'issuingOrganization', 'date']
             }
         },
+        portfolio: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    title: { type: Type.STRING },
+                    link: { type: Type.STRING },
+                    imageUrl: { type: Type.STRING, description: 'A relevant image URL for the portfolio item.' },
+                    description: { type: Type.STRING }
+                },
+                required: ['title', 'description']
+            }
+        },
         professionalNarrative: {
             type: Type.STRING,
             description: "A compelling professional narrative or summary."
         }
     },
-    required: ['personal', 'experience', 'education', 'skills', 'projects', 'certifications', 'professionalNarrative']
+    required: ['personal', 'experience', 'education', 'skills', 'projects', 'certifications', 'portfolio', 'professionalNarrative']
 };
 
 
@@ -294,13 +320,12 @@ export const parseAndEnhanceCVFromFile = async (file: File, language: string): P
     const filePart = await fileToGenerativePart(file);
 
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: {
-            parts: [
-                filePart,
-                {
-                    text: `You are an expert CV parser and enhancer. A user has uploaded their CV. Your task is to:
-1. Parse the document and extract all relevant information (personal details, work experience, education, skills, projects, certifications, professional narrative).
+        model: 'gemini-2.5-pro',
+        contents: [
+            filePart,
+            {
+                text: `You are an expert CV parser and enhancer. A user has uploaded their CV. Your task is to:
+1. Parse the document and extract all relevant information (personal details including social links, work experience, education, skills, projects, certifications, portfolio, professional narrative).
 2. Clean up and standardize the formatting of the extracted data.
 3. Enhance the content where possible: improve wording, fix typos, and ensure professional language. Use bullet points for responsibilities and achievements.
 4. Populate the provided JSON schema with the parsed and enhanced data.
@@ -309,9 +334,8 @@ export const parseAndEnhanceCVFromFile = async (file: File, language: string): P
 7. For dates, standardize them to YYYY-MM format if possible.
 
 Return ONLY the JSON object that conforms to the schema. Do not include any other text or markdown formatting.`
-                }
-            ]
-        },
+            }
+        ],
         config: {
             responseMimeType: "application/json",
             responseSchema: cvSchema,

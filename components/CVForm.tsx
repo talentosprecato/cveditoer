@@ -1,6 +1,8 @@
+
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { CVData, PersonalDetails, Experience, Education, SectionId, Project, Certification, PortfolioItem, SocialLink } from '../types.ts';
-import { PlusIcon, TrashIcon, SparklesIcon, DragHandleIcon, UploadIcon, FileIcon, XCircleIcon, BriefcaseIcon, CheckCircleIcon, SearchIcon, MailIcon, LinkIcon, FacebookIcon, InstagramIcon, TwitterIcon, GithubIcon, UserIcon, AcademicCapIcon, CodeBracketIcon, FolderIcon, TrophyIcon, PhotoIcon, ChatBubbleLeftRightIcon, SignatureIcon, ChevronDownIcon, CameraIcon, VideoPlusIcon } from './icons.tsx';
+// FIX: Removed unused 'CheckCircleIcon' which is not exported from icons.tsx
+import { PlusIcon, TrashIcon, SparklesIcon, DragHandleIcon, UploadIcon, FileIcon, XCircleIcon, BriefcaseIcon, SearchIcon, MailIcon, LinkIcon, FacebookIcon, InstagramIcon, TwitterIcon, GithubIcon, UserIcon, AcademicCapIcon, CodeBracketIcon, FolderIcon, TrophyIcon, PhotoIcon, ChatBubbleLeftRightIcon, SignatureIcon, ChevronDownIcon, CameraIcon, VideoPlusIcon, SaveIcon, FolderOpenIcon } from './icons.tsx';
 import { SignaturePad } from './SignaturePad.tsx';
 
 interface CVFormProps {
@@ -43,6 +45,7 @@ interface CVFormProps {
   onOpenJobModal: () => void;
   onOpenCoverLetterModal: () => void;
   onOpenVideoModal: () => void;
+  onLoadProjectData: (data: CVData) => void;
 }
 
 const Section: React.FC<{ title: string; children: React.ReactNode; icon: React.ReactNode; isOpen: boolean; onToggle: () => void; dragHandle: React.ReactNode; }> = ({ title, children, icon, isOpen, onToggle, dragHandle }) => (
@@ -138,6 +141,7 @@ export const CVForm: React.FC<CVFormProps> = ({
   onOpenJobModal,
   onOpenCoverLetterModal,
   onOpenVideoModal,
+  onLoadProjectData,
 }) => {
   const sectionDragItem = useRef<number | null>(null);
   const sectionDragOverItem = useRef<number | null>(null);
@@ -165,6 +169,7 @@ export const CVForm: React.FC<CVFormProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const loadProjectInputRef = useRef<HTMLInputElement>(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -197,6 +202,43 @@ export const CVForm: React.FC<CVFormProps> = ({
         onEnhanceCV(selectedFile);
     }
   };
+
+  const handleSaveProject = () => {
+    const dataStr = JSON.stringify(cvData, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = 'veravox-cv-project.json';
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleLoadProject = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const text = e.target?.result;
+            if (typeof text !== 'string') throw new Error("File is not readable");
+            const parsedData = JSON.parse(text);
+            onLoadProjectData(parsedData);
+            alert("Project loaded successfully!");
+        } catch (error) {
+            console.error("Failed to load project file:", error);
+            alert("Failed to load project. The file may be corrupted or not in the correct format.");
+        } finally {
+            // Reset file input so the same file can be loaded again
+            if(event.target) event.target.value = '';
+        }
+    };
+    reader.readAsText(file);
+  };
+
 
   const handleSectionDragStart = (e: React.DragEvent<HTMLDivElement>, position: number) => {
     sectionDragItem.current = position;
@@ -863,7 +905,7 @@ export const CVForm: React.FC<CVFormProps> = ({
             <SparklesIcon className="w-6 h-6 text-teal-500" />
             <h3 className="text-xl font-semibold text-stone-800 font-['Poppins']">Enhance with AI</h3>
         </div>
-        <p className="text-sm text-stone-600">Have an existing CV? Upload a PDF, and let AI parse and populate the form for you.</p>
+        <p className="text-sm text-stone-600">Have an existing CV? Upload a PDF file, and let AI parse and populate the form for you.</p>
         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-2 sm:space-y-0">
              <div className="flex-1">
                 <label htmlFor="file-upload" className="sr-only">Choose file</label>
@@ -900,12 +942,37 @@ export const CVForm: React.FC<CVFormProps> = ({
             >
                 {isEnhancing ? (
                     <>
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         Enhancing...
                     </>
                 ) : "Enhance"}
             </button>
         </div>
+      </div>
+      
+      <div className="bg-white/60 backdrop-blur-lg p-4 rounded-xl shadow-lg shadow-green-200/30 border border-white/30 space-y-3">
+          <div className="flex items-center space-x-2">
+              <FolderIcon className="w-6 h-6 text-teal-500" />
+              <h3 className="text-xl font-semibold text-stone-800 font-['Poppins']">Project Management</h3>
+          </div>
+          <p className="text-sm text-stone-600">Save your progress to a file to continue later, or load a previously saved project from your computer.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-2 sm:space-y-0">
+               <button
+                  onClick={handleSaveProject}
+                  className="flex-1 flex items-center justify-center px-4 py-2 border border-stone-300 text-sm font-medium rounded-md shadow-sm text-stone-700 bg-white hover:bg-stone-50"
+               >
+                  <SaveIcon className="w-5 h-5 mr-2" />
+                  Save to File
+               </button>
+               <button
+                  onClick={() => loadProjectInputRef.current?.click()}
+                  className="flex-1 flex items-center justify-center px-4 py-2 border border-stone-300 text-sm font-medium rounded-md shadow-sm text-stone-700 bg-white hover:bg-stone-50"
+               >
+                   <FolderOpenIcon className="w-5 h-5 mr-2" />
+                  Load from File
+               </button>
+               <input type="file" ref={loadProjectInputRef} onChange={handleLoadProject} accept=".json" className="hidden" />
+          </div>
       </div>
 
       {sections.map((sectionId, index) => {

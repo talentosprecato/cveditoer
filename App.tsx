@@ -1,9 +1,10 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { CVForm } from './components/CVForm.tsx';
 import { CVPreview } from './components/CVPreview.tsx';
 import { useCVData } from './hooks/useCVData.ts';
 import { generateCV, parseAndEnhanceCVFromFile } from './services/geminiService.ts';
-import { CVData, SectionId } from './types.ts';
+import { CVData, SectionId, SocialLink, Experience, Education, Project, Certification, PortfolioItem } from './types.ts';
 import { GithubIcon, InfoIcon, CoffeeIcon } from './components/icons.tsx';
 import { EnhancePreviewModal } from './components/EnhancePreviewModal.tsx';
 import { LanguageSelector } from './components/LanguageSelector.tsx';
@@ -13,10 +14,11 @@ import { CoverLetterModal } from './components/CoverLetterModal.tsx';
 import { Logo } from './components/Logo.tsx';
 import { VideoRecorderModal } from './components/VideoRecorderModal.tsx';
 
+
 const App: React.FC = () => {
   const { 
     cvData, 
-    loadCVData, 
+    loadCVData,
     updatePersonal, 
     updatePhoto,
     updateVideoProfile,
@@ -95,19 +97,28 @@ const App: React.FC = () => {
     setEnhancedPreviewMd('');
     try {
         const result = await parseAndEnhanceCVFromFile(file, language);
+        
+        // Safely process the AI response, providing defaults and adding IDs
         const processedData: CVData = {
-            ...result,
-            personal: { ...result.personal, photo: result.personal.photo || '', socialLinks: result.personal.socialLinks || [], videoProfileUrl: result.personal.videoProfileUrl || '' },
-            experience: result.experience.map(exp => ({ ...exp, id: crypto.randomUUID() })),
-            education: result.education.map(edu => ({ ...edu, id: crypto.randomUUID() })),
-            projects: result.projects.map(proj => ({...proj, id: crypto.randomUUID()})),
-            certifications: result.certifications.map(cert => ({...cert, id: crypto.randomUUID()})),
-            portfolio: result.portfolio.map(item => ({...item, id: crypto.randomUUID()})),
-            signature: '',
+            skills: result.skills || '',
+            professionalNarrative: result.professionalNarrative || '',
+            signature: '', // Always reset signature
+            personal: {
+                fullName: '', email: '', phone: '', dateOfBirth: '', placeOfBirth: '', residence: '',
+                linkedin: '', website: '', github: '', twitter: '', photo: '', videoProfileUrl: '',
+                ...(result.personal || {}),
+                socialLinks: (result.personal?.socialLinks || []).map((link: Omit<SocialLink, 'id'>) => ({ ...link, id: crypto.randomUUID() })),
+            },
+            experience: (result.experience || []).map((exp: Omit<Experience, 'id'>) => ({ ...exp, id: crypto.randomUUID() })),
+            education: (result.education || []).map((edu: Omit<Education, 'id'>) => ({ ...edu, id: crypto.randomUUID() })),
+            projects: (result.projects || []).map((proj: Omit<Project, 'id'>) => ({...proj, id: crypto.randomUUID()})),
+            certifications: (result.certifications || []).map((cert: Omit<Certification, 'id'>) => ({...cert, id: crypto.randomUUID()})),
+            portfolio: (result.portfolio || []).map((item: Omit<PortfolioItem, 'id'>) => ({...item, id: crypto.randomUUID()})),
         };
+
         setPendingEnhancedData(processedData);
 
-        const sectionsForPreview: SectionId[] = ['personal', 'experience', 'education', 'skills', 'projects', 'certifications', 'professionalNarrative'];
+        const sectionsForPreview: SectionId[] = ['personal', 'experience', 'education', 'skills', 'projects', 'certifications', 'portfolio', 'professionalNarrative'];
         const stream = await generateCV(processedData, 'modern', sectionsForPreview, language, 'right', 'center', 'medium');
         
         let markdownPreview = '';
@@ -201,6 +212,7 @@ const App: React.FC = () => {
           onOpenJobModal={() => setIsJobModalOpen(true)}
           onOpenCoverLetterModal={() => setIsCoverLetterModalOpen(true)}
           onOpenVideoModal={() => setIsVideoModalOpen(true)}
+          onLoadProjectData={loadCVData}
         />
         <CVPreview 
           markdownContent={generatedMd} 

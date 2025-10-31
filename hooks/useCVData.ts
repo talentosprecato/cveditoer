@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { CVData, PersonalDetails, Experience, Education, Project, Certification, PortfolioItem, SocialLink } from '../types.ts';
 
@@ -73,6 +74,34 @@ const initialCVData: CVData = {
   signature: '',
 };
 
+const addIdIfNeeded = <T extends {id?: string}>(item: T): T & {id: string} => ({ ...item, id: item.id || crypto.randomUUID() });
+
+const mergeWithInitialData = (loadedData: Partial<CVData>): CVData => {
+    const merged = {
+        ...initialCVData,
+        ...loadedData,
+        personal: { ...initialCVData.personal, ...(loadedData.personal || {}) },
+        experience: loadedData.experience || initialCVData.experience,
+        education: loadedData.education || initialCVData.education,
+        projects: loadedData.projects || initialCVData.projects,
+        certifications: loadedData.certifications || initialCVData.certifications,
+        portfolio: loadedData.portfolio || initialCVData.portfolio,
+    };
+
+    merged.personal.socialLinks = (merged.personal.socialLinks || []).map(addIdIfNeeded);
+    merged.experience = merged.experience.map(addIdIfNeeded);
+    merged.education = merged.education.map(addIdIfNeeded);
+    merged.projects = merged.projects.map(addIdIfNeeded);
+    merged.certifications = merged.certifications.map(addIdIfNeeded);
+    merged.portfolio = merged.portfolio.map(addIdIfNeeded);
+
+    merged.skills = loadedData.skills ?? initialCVData.skills;
+    merged.professionalNarrative = loadedData.professionalNarrative ?? initialCVData.professionalNarrative;
+    merged.signature = loadedData.signature ?? initialCVData.signature;
+
+    return merged as CVData;
+}
+
 
 export const useCVData = () => {
   const [cvData, setCvData] = useState<CVData>(() => {
@@ -80,21 +109,7 @@ export const useCVData = () => {
       const savedData = localStorage.getItem('cvData');
       if (savedData) {
         const parsed = JSON.parse(savedData);
-        // Deep merge with initial data to ensure new fields from updates are included
-        const mergedData = {
-            ...initialCVData,
-            ...parsed,
-            personal: { ...initialCVData.personal, ...(parsed.personal || {}) },
-            experience: parsed.experience || [],
-            education: parsed.education || [],
-            projects: parsed.projects || [],
-            certifications: parsed.certifications || [],
-            portfolio: parsed.portfolio || [],
-        };
-        if (!mergedData.personal.socialLinks) {
-            mergedData.personal.socialLinks = [];
-        }
-        return mergedData;
+        return mergeWithInitialData(parsed);
       }
     } catch (error) {
       console.error("Failed to load CV data from localStorage", error);
@@ -110,29 +125,31 @@ export const useCVData = () => {
       console.error("Failed to save CV data to localStorage", error);
     }
   }, [cvData]);
-
-  const updateCvData = useCallback((updater: React.SetStateAction<CVData>) => {
-    setCvData(updater);
-  }, []);
   
-  const loadCVData = (newData: CVData) => {
-    updateCvData(newData);
+  const loadCVData = (newData: Partial<CVData>) => {
+    const mergedData = mergeWithInitialData(newData);
+    setCvData(mergedData);
+  };
+
+  const resetCVData = () => {
+    localStorage.removeItem('cvData');
+    setCvData(initialCVData);
   };
 
   const updatePersonal = (field: keyof Omit<PersonalDetails, 'photo' | 'socialLinks' | 'videoProfileUrl'>, value: string) => {
-    updateCvData(prev => ({ ...prev, personal: { ...prev.personal, [field]: value } }));
+    setCvData(prev => ({ ...prev, personal: { ...prev.personal, [field]: value } }));
   };
 
   const updatePhoto = (base64: string) => {
-    updateCvData(prev => ({ ...prev, personal: { ...prev.personal, photo: base64 } }));
+    setCvData(prev => ({ ...prev, personal: { ...prev.personal, photo: base64 } }));
   };
   
   const updateVideoProfile = (url: string) => {
-    updateCvData(prev => ({ ...prev, personal: { ...prev.personal, videoProfileUrl: url } }));
+    setCvData(prev => ({ ...prev, personal: { ...prev.personal, videoProfileUrl: url } }));
   };
 
   const addSocialLink = () => {
-    updateCvData(prev => ({
+    setCvData(prev => ({
         ...prev,
         personal: {
             ...prev.personal,
@@ -145,7 +162,7 @@ export const useCVData = () => {
   };
 
   const updateSocialLink = (id: string, field: keyof Omit<SocialLink, 'id'>, value: string) => {
-    updateCvData(prev => ({
+    setCvData(prev => ({
       ...prev,
       personal: {
         ...prev.personal,
@@ -157,7 +174,7 @@ export const useCVData = () => {
   };
 
   const removeSocialLink = (id: string) => {
-    updateCvData(prev => ({
+    setCvData(prev => ({
       ...prev,
       personal: {
         ...prev.personal,
@@ -167,7 +184,7 @@ export const useCVData = () => {
   };
 
   const reorderSocialLinks = useCallback((startIndex: number, endIndex: number) => {
-    updateCvData(prev => {
+    setCvData(prev => {
         const newLinks = Array.from(prev.personal.socialLinks);
         const [removed] = newLinks.splice(startIndex, 1);
         newLinks.splice(endIndex, 0, removed);
@@ -176,10 +193,10 @@ export const useCVData = () => {
             personal: { ...prev.personal, socialLinks: newLinks }
         };
     });
-  }, [updateCvData]);
+  }, []);
 
   const addExperience = () => {
-    updateCvData(prev => ({
+    setCvData(prev => ({
       ...prev,
       experience: [
         ...prev.experience,
@@ -197,28 +214,28 @@ export const useCVData = () => {
   };
 
   const updateExperience = (id: string, field: keyof Omit<Experience, 'id'>, value: string) => {
-    updateCvData(prev => ({
+    setCvData(prev => ({
       ...prev,
       experience: prev.experience.map(exp => exp.id === id ? { ...exp, [field]: value } : exp),
     }));
   };
 
   const removeExperience = (id: string) => {
-    updateCvData(prev => ({ ...prev, experience: prev.experience.filter(exp => exp.id !== id) }));
+    setCvData(prev => ({ ...prev, experience: prev.experience.filter(exp => exp.id !== id) }));
   };
   
   const reorderExperience = useCallback((startIndex: number, endIndex: number) => {
-    updateCvData(prev => {
+    setCvData(prev => {
         const newExperience = Array.from(prev.experience);
         const [removed] = newExperience.splice(startIndex, 1);
         newExperience.splice(endIndex, 0, removed);
         return { ...prev, experience: newExperience };
     });
-  }, [updateCvData]);
+  }, []);
 
 
   const addEducation = () => {
-    updateCvData(prev => ({
+    setCvData(prev => ({
       ...prev,
       education: [
         ...prev.education,
@@ -236,27 +253,27 @@ export const useCVData = () => {
   };
 
   const updateEducation = (id: string, field: keyof Omit<Education, 'id'>, value: string) => {
-    updateCvData(prev => ({
+    setCvData(prev => ({
       ...prev,
       education: prev.education.map(edu => edu.id === id ? { ...edu, [field]: value } : edu),
     }));
   };
 
   const removeEducation = (id: string) => {
-    updateCvData(prev => ({ ...prev, education: prev.education.filter(edu => edu.id !== id) }));
+    setCvData(prev => ({ ...prev, education: prev.education.filter(edu => edu.id !== id) }));
   };
 
   const reorderEducation = useCallback((startIndex: number, endIndex: number) => {
-    updateCvData(prev => {
+    setCvData(prev => {
         const newEducation = Array.from(prev.education);
         const [removed] = newEducation.splice(startIndex, 1);
         newEducation.splice(endIndex, 0, removed);
         return { ...prev, education: newEducation };
     });
-  }, [updateCvData]);
+  }, []);
 
   const addProject = () => {
-    updateCvData(prev => ({
+    setCvData(prev => ({
         ...prev,
         projects: [
             ...prev.projects,
@@ -272,27 +289,27 @@ export const useCVData = () => {
   };
 
   const updateProject = (id: string, field: keyof Omit<Project, 'id'>, value: string) => {
-      updateCvData(prev => ({
+      setCvData(prev => ({
           ...prev,
           projects: prev.projects.map(proj => proj.id === id ? { ...proj, [field]: value } : proj),
       }));
   };
 
   const removeProject = (id: string) => {
-      updateCvData(prev => ({ ...prev, projects: prev.projects.filter(proj => proj.id !== id) }));
+      setCvData(prev => ({ ...prev, projects: prev.projects.filter(proj => proj.id !== id) }));
   };
 
   const reorderProject = useCallback((startIndex: number, endIndex: number) => {
-      updateCvData(prev => {
+      setCvData(prev => {
           const newProjects = Array.from(prev.projects);
           const [removed] = newProjects.splice(startIndex, 1);
           newProjects.splice(endIndex, 0, removed);
           return { ...prev, projects: newProjects };
       });
-  }, [updateCvData]);
+  }, []);
 
   const addCertification = () => {
-      updateCvData(prev => ({
+      setCvData(prev => ({
           ...prev,
           certifications: [
               ...prev.certifications,
@@ -307,27 +324,27 @@ export const useCVData = () => {
   };
 
   const updateCertification = (id: string, field: keyof Omit<Certification, 'id'>, value: string) => {
-      updateCvData(prev => ({
+      setCvData(prev => ({
           ...prev,
           certifications: prev.certifications.map(cert => cert.id === id ? { ...cert, [field]: value } : cert),
       }));
   };
 
   const removeCertification = (id: string) => {
-      updateCvData(prev => ({ ...prev, certifications: prev.certifications.filter(cert => cert.id !== id) }));
+      setCvData(prev => ({ ...prev, certifications: prev.certifications.filter(cert => cert.id !== id) }));
   };
 
   const reorderCertification = useCallback((startIndex: number, endIndex: number) => {
-      updateCvData(prev => {
+      setCvData(prev => {
           const newCertifications = Array.from(prev.certifications);
           const [removed] = newCertifications.splice(startIndex, 1);
           newCertifications.splice(endIndex, 0, removed);
           return { ...prev, certifications: newCertifications };
       });
-  }, [updateCvData]);
+  }, []);
 
   const addPortfolioItem = () => {
-    updateCvData(prev => ({
+    setCvData(prev => ({
         ...prev,
         portfolio: [
             ...prev.portfolio,
@@ -343,41 +360,42 @@ export const useCVData = () => {
   };
 
   const updatePortfolioItem = (id: string, field: keyof Omit<PortfolioItem, 'id'>, value: string) => {
-      updateCvData(prev => ({
+      setCvData(prev => ({
           ...prev,
           portfolio: prev.portfolio.map(item => item.id === id ? { ...item, [field]: value } : item),
       }));
   };
 
   const removePortfolioItem = (id: string) => {
-      updateCvData(prev => ({ ...prev, portfolio: prev.portfolio.filter(item => item.id !== id) }));
+      setCvData(prev => ({ ...prev, portfolio: prev.portfolio.filter(item => item.id !== id) }));
   };
 
   const reorderPortfolioItem = useCallback((startIndex: number, endIndex: number) => {
-      updateCvData(prev => {
+      setCvData(prev => {
           const newPortfolio = Array.from(prev.portfolio);
           const [removed] = newPortfolio.splice(startIndex, 1);
           newPortfolio.splice(endIndex, 0, removed);
           return { ...prev, portfolio: newPortfolio };
       });
-  }, [updateCvData]);
+  }, []);
 
 
   const updateSkills = (value: string) => {
-    updateCvData(prev => ({ ...prev, skills: value }));
+    setCvData(prev => ({ ...prev, skills: value }));
   };
 
   const updateProfessionalNarrative = (value: string) => {
-    updateCvData(prev => ({ ...prev, professionalNarrative: value }));
+    setCvData(prev => ({ ...prev, professionalNarrative: value }));
   };
 
   const updateSignature = (base64: string) => {
-    updateCvData(prev => ({ ...prev, signature: base64 }));
+    setCvData(prev => ({ ...prev, signature: base64 }));
   };
 
   return {
     cvData,
     loadCVData,
+    resetCVData,
     updatePersonal,
     updatePhoto,
     updateVideoProfile,
