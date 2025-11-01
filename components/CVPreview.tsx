@@ -503,6 +503,14 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
         setIsExporting(true);
 
         const { jsPDF } = window.jspdf;
+        const element = previewRef.current;
+
+        // Ensure we're at the top of the scrollable element and window
+        element.parentElement?.scrollTo(0, 0);
+        window.scrollTo(0, 0);
+        // A small delay to allow for repaint after scrolling
+        await new Promise(resolve => setTimeout(resolve, 50));
+
         const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'pt',
@@ -511,12 +519,15 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
             floatPrecision: 16
         });
 
-        const canvas = await window.html2canvas(previewRef.current, {
-            scale: 2, // Higher scale for better quality
+        const canvas = await window.html2canvas(element, {
+            scale: 2,
             useCORS: true,
+            allowTaint: true,
             logging: false,
-            width: previewRef.current.scrollWidth,
-            height: previewRef.current.scrollHeight
+            width: element.scrollWidth,
+            height: element.scrollHeight,
+            windowWidth: element.scrollWidth,
+            windowHeight: element.scrollHeight,
         });
         
         const imgData = canvas.toDataURL('image/png');
@@ -528,13 +539,13 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
         let position = 0;
         const pageHeight = pdf.internal.pageSize.getHeight();
         
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight, undefined, 'FAST');
         heightLeft -= pageHeight;
         
-        while (heightLeft >= 0) {
-            position = heightLeft - pdfHeight;
+        while (heightLeft > 0) {
+            position -= pageHeight;
             pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight, undefined, 'FAST');
             heightLeft -= pageHeight;
         }
         
@@ -600,14 +611,24 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
                 </div>
                  <FontSelector selectedFontPair={fontPair} onChange={onFontPairChange} />
                 <div className="pt-4 border-t border-green-100/80">
-                    <button
-                        onClick={onGenerate}
-                        disabled={isLoading}
-                        className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300 disabled:from-stone-300 disabled:to-stone-400 disabled:shadow-none disabled:transform-none"
-                    >
-                        <SparklesIcon className="w-5 h-5 mr-2" />
-                        {isLoading ? 'Generating...' : 'Generate / Update CV'}
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <button
+                            onClick={onGenerate}
+                            disabled={isLoading}
+                            className="flex-1 flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300 disabled:from-stone-300 disabled:to-stone-400 disabled:shadow-none disabled:transform-none"
+                        >
+                            <SparklesIcon className="w-5 h-5 mr-2" />
+                            {isLoading ? 'Generating...' : 'Generate / Update CV'}
+                        </button>
+                         <button
+                            onClick={handleDownloadPDF}
+                            disabled={isExporting || !markdownContent}
+                            className="flex-1 flex items-center justify-center px-4 py-2 border border-stone-300 text-sm font-medium rounded-md shadow-sm text-stone-700 bg-white hover:bg-stone-50 transition-colors disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed"
+                        >
+                            <DownloadIcon className="w-5 h-5 mr-2" />
+                            {isExporting ? 'Exporting PDF...' : 'Download as PDF'}
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -626,17 +647,6 @@ export const CVPreview: React.FC<CVPreviewProps> = ({
                     {!isLoading && !error && !markdownContent && <Placeholder />}
                     <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
                 </div>
-            </div>
-
-             <div className="flex-shrink-0 mt-4">
-                <button
-                    onClick={handleDownloadPDF}
-                    disabled={isExporting || !markdownContent}
-                    className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-teal-500 to-green-500 hover:shadow-lg hover:shadow-green-300/40 transform hover:-translate-y-0.5 transition-all duration-300 disabled:from-stone-300 disabled:to-stone-400 disabled:shadow-none disabled:transform-none"
-                >
-                    <DownloadIcon className="w-5 h-5 mr-2" />
-                    {isExporting ? 'Exporting PDF...' : 'Download as PDF'}
-                </button>
             </div>
         </div>
     );
